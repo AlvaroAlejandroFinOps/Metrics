@@ -10,7 +10,7 @@
 
 # THINKING SEED MASTER: MetricsThinking™ Engine
 
-## 0. IDENTIDAD Y METADATOS
+## 0. IDENTIDAD Y METADATOS 
 ```yaml
 seed_schema_version: "2.0"
 project_name: "MetricsThinking"
