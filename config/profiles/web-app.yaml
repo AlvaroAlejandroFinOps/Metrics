@@ -1,0 +1,168 @@
+# MetricsThinking Canonical Profile: Modern Web Application
+profile_name: "Modern Web Application"
+version: "2.0.0"
+description: "Canonical 10-module evaluation matrix specialized for Fullstack and Modern Frontend Web Applications (React, Next.js, Vue, Vite, TypeScript, Tailwind, API layers)."
+
+modules:
+  - id: "M01"
+    name: "Architectural Specification & Requirements"
+    weight: 0.08
+    description: "Evaluates PRDs, project seeds, design system specifications, and requirement traceability."
+    criteria:
+      - id: "C01_1"
+        name: "Formal Seed & UI/UX Specifications"
+        description: "Checks for formal project seed, architecture docs, or UI/UX component specifications in markdown."
+        weight: 0.50
+        file_patterns: ["01_seed/**/*.md", "docs/**/*.md", "README.md", "design-system.md"]
+        required_content_keywords: ["architecture", "component", "state", "routing", "ui"]
+      - id: "C01_2"
+        name: "Feature Scope & Route Definitions"
+        description: "Checks if application routing, navigation structure, and page-level requirements are documented."
+        weight: 0.50
+        file_patterns: ["docs/**/*.md", "src/routes/**", "src/pages/**", "src/app/**"]
+
+  - id: "M02"
+    name: "Tooling, Package Management & Environment Setup"
+    weight: 0.07
+    description: "Evaluates package manifests, build tool configs, TypeScript settings, and linting."
+    criteria:
+      - id: "C02_1"
+        name: "Modern Package Manifest & Dependency Lock"
+        description: "Checks for package.json alongside modern lockfile (pnpm-lock.yaml, yarn.lock, package-lock.json)."
+        weight: 0.50
+        file_patterns: ["package.json", "pnpm-lock.yaml", "yarn.lock", "package-lock.json", "bun.lockb"]
+      - id: "C02_2"
+        name: "Type System & Linter Configurations"
+        description: "Validates TypeScript compiler config (tsconfig.json), ESLint, Prettier, or Biome configuration."
+        weight: 0.50
+        file_patterns: ["tsconfig.json", ".eslintrc*", "eslint.config.*", "biome.json", ".prettierrc*"]
+
+  - id: "M03"
+    name: "Design System, Token Architecture & UI Foundations"
+    weight: 0.10
+    description: "Audits CSS design tokens, theme configurations, CSS variables, and atomic UI primitives."
+    criteria:
+      - id: "C03_1"
+        name: "Theme Tokens & Styling Configuration"
+        description: "Checks for Tailwind config, UnoCSS, CSS Variables, theme tokens, or Styled Components theme."
+        weight: 0.50
+        file_patterns: ["tailwind.config.*", "postcss.config.*", "src/styles/**", "src/theme/**", "src/index.css", "src/globals.css"]
+      - id: "C03_2"
+        name: "Reusable UI Primitives & Component Atoms"
+        description: "Validates reusable atom/molecule components (Buttons, Modals, Inputs, Cards, Badges)."
+        weight: 0.50
+        file_patterns: ["src/components/ui/**", "src/components/common/**", "src/components/primitives/**"]
+
+  - id: "M04"
+    name: "Application State Management & Context Architecture"
+    weight: 0.10
+    description: "Assesses global state management, server cache (TanStack Query, SWR, Zustand, Redux, Context)."
+    criteria:
+      - id: "C04_1"
+        name: "Client State Stores & Contexts"
+        description: "Checks for Zustand stores, Redux slices, Jotai/Recoil atoms, or React Context providers."
+        weight: 0.50
+        file_patterns: ["src/store/**", "src/stores/**", "src/context/**", "src/contexts/**", "src/state/**"]
+      - id: "C04_2"
+        name: "Server Cache & Asynchronous State"
+        description: "Validates TanStack Query (React Query), SWR, RTK Query, or Apollo Client hooks."
+        weight: 0.50
+        file_patterns: ["src/hooks/queries/**", "src/hooks/mutations/**", "src/api/**", "src/services/**"]
+
+  - id: "M05"
+    name: "Routing, Navigation & Layout Orchestration"
+    weight: 0.10
+    description: "Evaluates layout hierarchy, nested routing, dynamic route parameters, and protected routes."
+    criteria:
+      - id: "C05_1"
+        name: "Page Route Hierarchy & Dynamic Handlers"
+        description: "Audits App Router (Next.js), React Router, TanStack Router, or Vue Router structure."
+        weight: 0.50
+        file_patterns: ["src/app/**/page.*", "src/pages/**", "src/routes/**", "src/router/**"]
+      - id: "C05_2"
+        name: "Layout Shells, Headers, Navbars & Error Boundaries"
+        description: "Validates layout wrappers, navigation bars, footers, and error fallback components."
+        weight: 0.50
+        file_patterns: ["src/app/**/layout.*", "src/components/layout/**", "src/components/navigation/**", "src/components/ErrorBoundary.*"]
+
+  - id: "M06"
+    name: "API Integration, Data Fetching & Contract Typing"
+    weight: 0.12
+    description: "Assesses HTTP clients, OpenAPI/tRPC contracts, zod schema validations, and mock handlers."
+    criteria:
+      - id: "C06_1"
+        name: "Schema Validation & Type-Safe Payloads"
+        description: "Validates Zod, Valibot, Yup, or TypeBox schemas for API payloads and form states."
+        weight: 0.50
+        file_patterns: ["src/schemas/**", "src/types/**", "src/models/**", "src/validations/**"]
+      - id: "C06_2"
+        name: "HTTP Client & Network Error Handling"
+        description: "Checks for Axios, fetch wrapper, Ky, or tRPC client with centralized interceptors and error handling."
+        weight: 0.50
+        file_patterns: ["src/lib/api.*", "src/services/api.*", "src/api/**", "src/utils/http.*"]
+
+  - id: "M07"
+    name: "Authentication, Authorization & Security Posture"
+    weight: 0.10
+    description: "Audits user authentication (NextAuth, Supabase, Firebase, Clerk, JWT), RBAC guards, and CSRF protection."
+    criteria:
+      - id: "C07_1"
+        name: "Authentication Provider & Session Lifecycle"
+        description: "Checks for NextAuth/Auth.js, Supabase Auth, Firebase Auth, Clerk, or JWT token refresh logic."
+        weight: 0.50
+        file_patterns: ["src/lib/auth.*", "src/auth/**", "src/middleware.*", "src/hooks/useAuth.*"]
+      - id: "C07_2"
+        name: "Route Guards & Role-Based Access Control"
+        description: "Validates protected route wrappers, permission checks, and security middleware."
+        weight: 0.50
+        file_patterns: ["src/components/auth/ProtectedRoute.*", "src/middleware.*", "src/utils/rbac.*"]
+
+  - id: "M08"
+    name: "Testing Suite, Visual Regression & Coverage"
+    weight: 0.13
+    description: "Evaluates unit tests (Vitest/Jest), component testing (Testing Library), and E2E (Playwright/Cypress)."
+    criteria:
+      - id: "C08_1"
+        name: "Unit & Component Test Coverage"
+        description: "Audits test files using Vitest, Jest, React Testing Library, or Storybook interaction tests."
+        weight: 0.50
+        file_patterns: ["src/**/*.test.*", "src/**/*.spec.*", "tests/**/*.test.*", "tests/**/*.spec.*"]
+      - id: "C08_2"
+        name: "End-to-End (E2E) & Integration Testing"
+        description: "Checks for Playwright or Cypress specs validating full user journeys."
+        weight: 0.50
+        file_patterns: ["e2e/**", "cypress/**", "playwright.config.*"]
+
+  - id: "M09"
+    name: "Performance, Asset Optimization & Accessibility"
+    weight: 0.10
+    description: "Assesses Core Web Vitals, code-splitting (lazy/Suspense), image optimization, and a11y ARIA semantics."
+    criteria:
+      - id: "C09_1"
+        name: "Lazy Loading, Dynamic Imports & Asset Bundling"
+        description: "Validates React.lazy, dynamic imports, next/image, and bundle analysis tools."
+        weight: 0.50
+        file_patterns: ["src/**", "vite.config.*", "next.config.*"]
+        required_content_keywords: ["lazy", "Suspense", "dynamic", "import"]
+      - id: "C09_2"
+        name: "Accessibility (a11y) & Semantic Landmarks"
+        description: "Checks for ARIA attributes, semantic HTML5 elements, and focus management."
+        weight: 0.50
+        file_patterns: ["src/components/**"]
+        required_content_keywords: ["aria-", "role=", "<main", "<nav", "<header"]
+
+  - id: "M10"
+    name: "CI/CD Deployment, Monitoring & Production Readiness"
+    weight: 0.10
+    description: "Evaluates automated build pipelines (GitHub Actions, Vercel, Netlify, Docker) and telemetry/analytics (Sentry, PostHog)."
+    criteria:
+      - id: "C10_1"
+        name: "Automated Build & CI/CD Pipeline"
+        description: "Audits GitHub Actions workflows, Dockerfile, or Cloud deployment configurations."
+        weight: 0.50
+        file_patterns: [".github/workflows/*.yml", "Dockerfile", "vercel.json", "netlify.toml"]
+      - id: "C10_2"
+        name: "Telemetry, Error Tracking & Analytics"
+        description: "Validates Sentry, PostHog, Google Analytics, or Datadog RUM initialization."
+        weight: 0.50
+        file_patterns: ["sentry.client.config.*", "src/lib/analytics.*", "src/lib/sentry.*", "src/utils/logger.*"]

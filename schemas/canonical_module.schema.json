@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metricsthinking.io/schemas/canonical_module.schema.json",
+  "title": "CanonicalModule",
+  "description": "Validation contract for one of the 10 domain-adapted canonical modules in the MetricsThinking matrix.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^M(0[1-9]|10)$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 100.0
+    },
+    "status": {
+      "type": "string",
+      "enum": ["done", "active", "backlog", "blocked"]
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "$ref": "audit_criterion.schema.json"
+      },
+      "minItems": 1
+    },
+    "key_deliverables": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "missing_elements": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "remediation_advice": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "weight",
+    "score",
+    "status",
+    "criteria",
+    "key_deliverables",
+    "missing_elements",
+    "remediation_advice"
+  ],
+  "additionalProperties": false
+}
