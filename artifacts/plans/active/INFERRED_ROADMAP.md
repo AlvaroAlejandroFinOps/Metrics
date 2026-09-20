@@ -3,7 +3,7 @@
 > **Framework de Gobernanza:** MetricsThinking™ v1.0.0-ENTERPRISE (SDD / Stage-Gate)  
 > **Estado Consolidado:** `91.7% / 100.0%` — **Excelencia Operativa / Producción (90.0% - 100.0%)**  
 > **Cuello de Botella Activo:** `M06: Integración e Interoperabilidad (66.7% completado)`  
-> **Fecha de Emisión:** `2026-09-20 02:00:02`  
+> **Fecha de Emisión:** `2026-09-20 02:19:07`  
 
 Este documento representa el **Roadmap Operacional y de Ejecución Técnica** derivado por ingeniería inversa a partir de la evidencia física (Ground Truth) del repositorio. Sirve como guía de trabajo para el equipo de arquitectura y desarrollo.
 
@@ -27,7 +27,7 @@ Este documento representa el **Roadmap Operacional y de Ejecución Técnica** de
 
 ### Checklists de Implementación
 - [x] **AST / Modelos Canónicos Desacoplados** (`M02-C01`): Modelos de dominio canónicos detectados en 1 archivos (e.g. 'src/metricsthinking/models.py'). *(Evidencia: `src/metricsthinking/models.py`)*
-- [x] **ADRs Documentados** (`M02-C02`): Registro formal de decisiones arquitectónicas (ADRs) documentado en 'artifacts/plans/active/01_EVALUATION_CRITERIA_CATALOG.md'. *(Evidencia: `artifacts/plans/active/01_EVALUATION_CRITERIA_CATALOG.md`)*
+- [x] **ADRs Documentados** (`M02-C02`): Decisiones arquitectónicas formales identificadas (2 archivos, e.g. 'docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md'). *(Evidencia: `docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md`)*
 - [x] **Contratos JSON Schema Validados** (`M02-C03`): Contratos formales de datos / esquemas presentes (3 esquemas, e.g. 'schemas/audit_criterion.schema.json'). *(Evidencia: `schemas/audit_criterion.schema.json`)*
 - [x] **Topología y Grafos Formales** (`M02-C04`): Mapa topológico satelital y grafo formal del proyecto activo en '.context/tree.json'. *(Evidencia: `.context/tree.json`)*
 

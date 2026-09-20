@@ -1,9 +1,14 @@
 version: 1.0
 directory: docs/notes
 role: engineers_notes
-purpose: "Bitácoras de ingeniería, registro de deuda técnica, decisiones rápidas (ADRs) y análisis de causa raíz (RCA)."
-relevance: medium
+purpose: "Bitácoras de ingeniería, compendio académico de metodologías SDD, evaluación de proyectos, notas de Context Engineering y registros de decisiones (ADRs)."
+relevance: high
 crawl: true
 read_priority: p2
-token_density: sparse
-instructions: Notas de ingeniería y registros de decisiones.
+token_density: dense
+instructions: "Compendio de papers académicos sobre SDD/evaluación de proyectos y principios de alineación de Context Engineering con MetricsThinking™."
+files:
+  - name: ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md
+    description: "10 reseñas de papers académicos fundamentales con citas formales y BibTeX sobre SDD, Stage-Gate y métricas de software."
+  - name: CONTEXT_ENGINEERING_METRICSTHINKING_ALIGNMENT.md
+    description: "Guía arquitectónica sobre la optimización de contexto, balizas iDirectory y alineación Ground Truth en agentes de IA."

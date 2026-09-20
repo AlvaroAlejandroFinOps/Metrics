@@ -3,10 +3,10 @@
 > **Motor Evaluador:** MetricsThinking™ v1.0.0-ENTERPRISE  
 > **Proyecto Auditado:** `MetricsThinking`  
 > **Ubicación:** `D:\0001 HyperScale Thinking\PROYECTOS CLOUD\Data & AI Strategy\MetricsThinking`  
-> **Fecha de Auditoría:** `2026-09-20 02:00:02`  
+> **Fecha de Auditoría:** `2026-09-20 02:19:07`  
 > **Auditor Responsable:** `MetricsThinking™ Universal Auditor`  
 > **Perfil Aplicado:** `default`  
-> **Git Commit / Branch:** `N/A` / `N/A`  
+> **Git Commit / Branch:** `6eb9b8f` / `master`  
 > **Score Consolidado:** **`91.7% / 100.0%`**  
 > **Banda de Madurez:** **Excelencia Operativa / Producción (90.0% - 100.0%)**
 
@@ -19,7 +19,7 @@ MetricsThinking™ ha completado la auditoría forense estricta basada en eviden
 - **Nota Global Consolidada ($Score_{Total}$):** **`91.67%`**
 - **Criterios Cumplidos:** **`29 / 31`** (93.5%)
 - **Cuello de Botella Inmediato:** **`M06: Integración e Interoperabilidad (66.7% completado)`**
-- **Archivos Físicos Escaneados:** **`68`**
+- **Archivos Físicos Escaneados:** **`70`**
 - **Memoria Técnica (Seed):** `Presente`
 - **Gobernanza iDirectory (.context.yaml):** `Activa`
 
@@ -114,7 +114,7 @@ flowchart LR
 | Criterio | Nombre | Estado | Evidencia Física Detectada |
 |:---|:---|:---:|:---|
 | `M02-C01` | AST / Modelos Canónicos Desacoplados | ✅ `[CUMPLIDO]` | **`src/metricsthinking/models.py`** — Modelos de dominio canónicos detectados en 1 archivos (e.g. 'src/metricsthinking/models.py'). |
-| `M02-C02` | ADRs Documentados | ✅ `[CUMPLIDO]` | **`artifacts/plans/active/01_EVALUATION_CRITERIA_CATALOG.md`** — Registro formal de decisiones arquitectónicas (ADRs) documentado en 'artifacts/plans/active/01_EVALUATION_CRITERIA_CATALOG.md'. |
+| `M02-C02` | ADRs Documentados | ✅ `[CUMPLIDO]` | **`docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md`** — Decisiones arquitectónicas formales identificadas (2 archivos, e.g. 'docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md'). |
 | `M02-C03` | Contratos JSON Schema Validados | ✅ `[CUMPLIDO]` | **`schemas/audit_criterion.schema.json`** — Contratos formales de datos / esquemas presentes (3 esquemas, e.g. 'schemas/audit_criterion.schema.json'). |
 | `M02-C04` | Topología y Grafos Formales | ✅ `[CUMPLIDO]` | **`.context/tree.json`** — Mapa topológico satelital y grafo formal del proyecto activo en '.context/tree.json'. |
 

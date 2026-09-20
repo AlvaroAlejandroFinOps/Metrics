@@ -1,11 +1,11 @@
 {
   "project_name": "MetricsThinking",
   "project_path": "D:\\0001 HyperScale Thinking\\PROYECTOS CLOUD\\Data & AI Strategy\\MetricsThinking",
-  "audit_date": "2026-09-20 02:00:02",
+  "audit_date": "2026-09-20 02:19:07",
   "auditor": "MetricsThinking™ Universal Auditor",
   "profile_used": "default",
-  "git_commit": null,
-  "git_branch": null,
+  "git_commit": "6eb9b8f",
+  "git_branch": "master",
   "modules": [
     {
       "module_id": "M01",
@@ -60,8 +60,8 @@
           "criterion_id": "M02-C02",
           "name": "ADRs Documentados",
           "fulfilled": true,
-          "evidence_path": "artifacts/plans/active/01_EVALUATION_CRITERIA_CATALOG.md",
-          "evidence_detail": "Registro formal de decisiones arquitectónicas (ADRs) documentado en 'artifacts/plans/active/01_EVALUATION_CRITERIA_CATALOG.md'.",
+          "evidence_path": "docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md",
+          "evidence_detail": "Decisiones arquitectónicas formales identificadas (2 archivos, e.g. 'docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md').",
           "remediation_hint": "Registrar ADRs formales en docs/notes o docs/architecture."
         },
         {
@@ -389,14 +389,14 @@
     }
   ],
   "stats": {
-    "total_files_scanned": 68,
+    "total_files_scanned": 70,
     "seeds_detected": 1,
     "manifests_detected": 2,
     "context_files_detected": 24,
     "schemas_detected": 3,
     "tests_detected": 6,
     "source_files_detected": 9,
-    "is_git": false
+    "is_git": true
   },
   "consolidated_score": 91.67,
   "maturity_band": "Excelencia Operativa / Producción (90.0% - 100.0%)",
