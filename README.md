@@ -1,4 +1,4 @@
-# METRICSTHINKING: Universal Technology Project Reverse Engineering & Ground Truth Audit Engine
+# METRICSTHINKING: Universal Technology Project Reverse Engineering & Ground Truth Audit Engine 
 
 **Language:** [English](README.md) | [Español](README_ES.md)
 
@@ -41,8 +41,8 @@ The engine partitions any technology project into a domain-adapted matrix of 10 
 |                                      +----------------------------+       +---------------------+  |
 |                                      |   05. Multi-Channel Sync   | <---- | 04. ArtifactRenderer|  |
 |                                      |  - Local artifacts/ dir    |       |  - MetricsThinking. |  |
-|                                      |  - Global skill workspace  |       |    json / .md       |  |
-|                                      |  - CI/CD step output       |       |  - Mermaid LR flow  |  |
+|                                      |  - Multi-AI Skill deploy   |       |    json / .md       |  |
+|                                      |  - CI/CD & MCP JSON-RPC    |       |  - Mermaid LR flow  |  |
 |                                      |                            |       |  - INFERRED_ROADMAP |  |
 |                                      +----------------------------+       +---------------------+  |
 +----------------------------------------------------------------------------------------------------+
@@ -91,12 +91,17 @@ $$\mathcal{B}(\Phi) = \begin{cases}
 
 ---
 
-## 5. Repository Structure & Artifacts
+## 5. Repository Structure & Multi-Provider Ecosystem
 
 ```text
 MetricsThinking/
-├── 01_seed/
-│   └── seed-metricsthinking-master.md        # Formal project architectural DNA
+├── .agents/skills/metrics/                   # Google Antigravity local workspace skill
+│   └── SKILL.md
+├── integrations/                             # Native AI provider adapters
+│   ├── claude/CLAUDE.md                      # Anthropic Claude Code & Desktop
+│   ├── cursor/metrics.mdc                    # Cursor IDE / Windsurf rules
+│   └── copilot/copilot-instructions.md       # GitHub Copilot & OpenAI instructions
+├── AGENTS.md                                 # Universal open agent standard
 ├── artifacts/
 │   ├── MetricsThinking.json                  # Canonical machine-readable audit report
 │   ├── MetricsThinking.md                    # Executive human-readable audit report
@@ -110,24 +115,20 @@ MetricsThinking/
 │   ├── audit_criterion.schema.json           # JSON Schema for criteria contracts
 │   ├── canonical_module.schema.json          # JSON Schema for module contracts
 │   └── project_audit_report.schema.json      # JSON Schema for full audit reports
+├── scripts/
+│   └── install_skill.py                      # Multi-provider skill installer
 ├── src/
 │   └── metricsthinking/
 │       ├── __init__.py                       # Package exports
-│       ├── cli.py                            # Typer-powered CLI interface
+│       ├── cli.py                            # Multi-command CLI interface
 │       ├── collector.py                      # Ground Truth evidence ingestion
 │       ├── engine.py                         # 5-phase orchestrator
 │       ├── evaluator.py                      # Matrix evaluator against profiles
+│       ├── mcp_server.py                     # Model Context Protocol (MCP) JSON-RPC server
 │       ├── models.py                         # Immutable Pydantic v2 data models
 │       ├── renderer.py                       # Mermaid LR and Markdown generator
 │       └── scorer.py                         # Mathematical scoring & action planner
-├── tests/
-│   ├── test_cli.py                           # CLI execution and flag tests
-│   ├── test_collector.py                     # File & token scanning tests
-│   ├── test_evaluator.py                     # Profile matching & scoring tests
-│   ├── test_renderer.py                      # Mermaid LR and artifact render tests
-│   └── test_scorer.py                        # Mathematical aggregation tests
-├── .github/workflows/
-│   └── ci.yml                                # Automated CI/CD pipeline
+├── tests/                                    # Exhaustive pytest verification suite
 ├── pyproject.toml                            # Standard Python build configuration
 ├── README.md                                 # International English documentation
 └── README_ES.md                              # Rigorous Spanish documentation
@@ -135,49 +136,78 @@ MetricsThinking/
 
 ---
 
-## 6. Execution & Verification Protocol
+## 6. Multi-Provider AI Skill Installation
 
-### 6.1. Environment Setup & Prerequisites
-Python $\ge 3.10$ is required.
+MetricsThinking can be deployed as an active skill/tool across all major AI assistant platforms:
 
+### 6.1. Quick Installation via CLI
 ```bash
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies and local package in editable mode
+# Clone the repository
+git clone https://github.com/AlvaroAlejandroFinOps/Metrics.git
+cd Metrics
 pip install -e ".[dev]"
+
+# Install skill for ALL detected AI providers in current workspace:
+metricsthinking install-skill --target all
+
+# Or install for a specific provider:
+metricsthinking install-skill --target antigravity   # Google Antigravity
+metricsthinking install-skill --target claude        # Anthropic Claude Code
+metricsthinking install-skill --target cursor        # Cursor IDE
+metricsthinking install-skill --target copilot       # GitHub Copilot
+metricsthinking install-skill --target mcp           # Model Context Protocol snippet
 ```
 
-### 6.2. Pipeline Execution
-
+### 6.2. Global Google Antigravity Skill Installation
+To make the `/metrics` skill available globally across any workspace in Antigravity:
 ```bash
-# Run full audit on current directory using default profile
-metricsthinking audit --target . --output-dir artifacts
-
-# Run audit with specialized data platform profile
-metricsthinking audit --target . --profile data-platform --output-dir artifacts
-
-# Inspect available evaluation profiles
-metricsthinking profiles
+metricsthinking install-skill --target antigravity --global
 ```
 
-### 6.3. Verification Suite & Invariant Tests
-
+### 6.3. Model Context Protocol (MCP) Integration
+Launch the standard JSON-RPC stdio server:
 ```bash
-# Run unit test suite with coverage
-pytest tests/ -v --cov=metricsthinking --cov-report=term-missing
-
-# Execute static type checking
-mypy src/
-
-# Execute static linting
-ruff check src/ tests/
+metricsthinking mcp
+```
+Add to your Claude Desktop or Cursor `mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "metricsthinking": {
+      "command": "metricsthinking",
+      "args": ["mcp"]
+    }
+  }
+}
 ```
 
 ---
 
-## 7. Domain Glossary
+## 7. Execution & Verification Protocol
+
+### 7.1. Running Forensic Audits Directly
+
+```bash
+# Run full audit on current directory using default profile
+metricsthinking audit --target . --out-dir artifacts
+
+# Run audit with specialized data platform profile
+metricsthinking audit --target . --profile data-platform --out-dir artifacts
+```
+
+### 7.2. Verification Suite & Invariant Tests
+
+```bash
+# Run unit test suite with coverage
+python -m pytest tests/ -v
+
+# Execute static linting
+ruff check src/ tests/ scripts/
+```
+
+---
+
+## 8. Domain Glossary
 
 * **Ground Truth:** Verifiable, physical evidence within the repository (source code, compiled assets, configuration manifests, test suites) as opposed to aspirational documentation.
 * **Canonical Module:** One of the 10 domain-adapted lifecycle stages evaluated to calculate overall project completeness.
@@ -186,7 +216,7 @@ ruff check src/ tests/
 
 ---
 
-## 8. Academic & Engineering References
+## 9. Academic & Engineering References
 
 1. IEEE Computer Society. *IEEE Standard for Software and System Test Documentation*. IEEE Std 829-2008.
 2. Fowler, M. *Continuous Integration*. Addison-Wesley, 2006.

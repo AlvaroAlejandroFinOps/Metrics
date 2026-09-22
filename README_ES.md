@@ -41,8 +41,8 @@ El motor desacopla cualquier proyecto tecnológico en una matriz adaptada al dom
 |                                      +----------------------------+       +---------------------+  |
 |                                      |  05. Sincronización Multi  | <---- | 04. ArtifactRenderer|  |
 |                                      |  - Carpeta artifacts/      |       |  - MetricsThinking. |  |
-|                                      |  - Skill global workspace  |       |    json / .md       |  |
-|                                      |  - Salida de pasos CI/CD   |       |  - Flujo Mermaid LR |  |
+|                                      |  - Despliegue Multi-Skill  |       |    json / .md       |  |
+|                                      |  - Servidor MCP JSON-RPC   |       |  - Flujo Mermaid LR |  |
 |                                      |                            |       |  - INFERRED_ROADMAP |  |
 |                                      +----------------------------+       +---------------------+  |
 +----------------------------------------------------------------------------------------------------+
@@ -91,12 +91,17 @@ $$\mathcal{B}(\Phi) = \begin{cases}
 
 ---
 
-## 5. Estructura del Repositorio y Artefactos
+## 5. Estructura del Repositorio y Ecosistema Multi-Proveedor
 
 ```text
 MetricsThinking/
-├── 01_seed/
-│   └── seed-metricsthinking-master.md        # ADN arquitectónico formal del proyecto
+├── .agents/skills/metrics/                   # Skill local para Google Antigravity
+│   └── SKILL.md
+├── integrations/                             # Adaptadores nativos para proveedores de IA
+│   ├── claude/CLAUDE.md                      # Anthropic Claude Code y Desktop
+│   ├── cursor/metrics.mdc                    # Reglas para Cursor IDE y Windsurf
+│   └── copilot/copilot-instructions.md       # Instrucciones GitHub Copilot y OpenAI
+├── AGENTS.md                                 # Estándar abierto universal para agentes
 ├── artifacts/
 │   ├── MetricsThinking.json                  # Reporte canónico machine-readable
 │   ├── MetricsThinking.md                    # Reporte ejecutivo human-readable
@@ -110,24 +115,20 @@ MetricsThinking/
 │   ├── audit_criterion.schema.json           # Contrato JSON Schema para criterios
 │   ├── canonical_module.schema.json          # Contrato JSON Schema para módulos
 │   └── project_audit_report.schema.json      # Contrato JSON Schema para reportes
+├── scripts/
+│   └── install_skill.py                      # Instalador automatizado multi-proveedor
 ├── src/
 │   └── metricsthinking/
 │       ├── __init__.py                       # Exportaciones del paquete
-│       ├── cli.py                            # Interfaz CLI con Typer
+│       ├── cli.py                            # Interfaz CLI multi-comando
 │       ├── collector.py                      # Ingestión de evidencia Ground Truth
 │       ├── engine.py                         # Orquestador del pipeline de 5 fases
 │       ├── evaluator.py                      # Evaluador matricial según perfil
+│       ├── mcp_server.py                     # Servidor Model Context Protocol (MCP)
 │       ├── models.py                         # Modelos Pydantic v2 inmutables
 │       ├── renderer.py                       # Generador Mermaid LR y Markdown
 │       └── scorer.py                         # Motor de scoring y priorización
-├── tests/
-│   ├── test_cli.py                           # Pruebas de CLI y comandos
-│   ├── test_collector.py                     # Pruebas de escaneo de archivos
-│   ├── test_evaluator.py                     # Pruebas de evaluación de criterios
-│   ├── test_renderer.py                      # Pruebas de renderizado Mermaid LR
-│   └── test_scorer.py                        # Pruebas de agregación matemática
-├── .github/workflows/
-│   └── ci.yml                                # Pipeline automatizado CI/CD
+├── tests/                                    # Suite exhaustiva de pruebas unitarias
 ├── pyproject.toml                            # Especificación de build estándar
 ├── README.md                                 # Documentación maestra en inglés
 └── README_ES.md                              # Documentación técnica en español
@@ -135,49 +136,78 @@ MetricsThinking/
 
 ---
 
-## 6. Protocolo de Ejecución y Verificación
+## 6. Instalación de la Skill en Proveedores de IA
 
-### 6.1. Configuración de Ambiente y Prerrequisitos
-Se requiere Python $\ge 3.10$.
+MetricsThinking puede desplegarse como herramienta o skill activa en todos los principales asistentes de IA:
 
+### 6.1. Instalación Rápida vía CLI
 ```bash
-# Crear y activar entorno virtual
-python -m venv .venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-
-# Instalar dependencias y paquete en modo editable
+# Clonar el repositorio
+git clone https://github.com/AlvaroAlejandroFinOps/Metrics.git
+cd Metrics
 pip install -e ".[dev]"
+
+# Instalar skill para TODOS los proveedores en el workspace actual:
+metricsthinking install-skill --target all
+
+# O instalar para un proveedor específico:
+metricsthinking install-skill --target antigravity   # Google Antigravity
+metricsthinking install-skill --target claude        # Anthropic Claude Code
+metricsthinking install-skill --target cursor        # Cursor IDE
+metricsthinking install-skill --target copilot       # GitHub Copilot
+metricsthinking install-skill --target mcp           # Generar snippet MCP
 ```
 
-### 6.2. Ejecución del Pipeline
-
+### 6.2. Instalación Global en Google Antigravity
+Para disponibilizar `/metrics` de forma global en cualquier workspace de Antigravity:
 ```bash
-# Ejecutar auditoría completa sobre el directorio actual
-metricsthinking audit --target . --output-dir artifacts
-
-# Ejecutar auditoría con perfil especializado en plataformas de datos
-metricsthinking audit --target . --profile data-platform --output-dir artifacts
-
-# Listar perfiles disponibles
-metricsthinking profiles
+metricsthinking install-skill --target antigravity --global
 ```
 
-### 6.3. Suite de Verificación y Pruebas de Invariantes
-
+### 6.3. Integración Universal vía Model Context Protocol (MCP)
+Iniciar el servidor JSON-RPC por stdio:
 ```bash
-# Ejecutar suite de pruebas unitarias con cobertura
-pytest tests/ -v --cov=metricsthinking --cov-report=term-missing
-
-# Ejecutar verificación estática de tipos
-mypy src/
-
-# Ejecutar linter estático
-ruff check src/ tests/
+metricsthinking mcp
+```
+Snippet para añadir a `mcp_config.json` en Claude Desktop o Cursor:
+```json
+{
+  "mcpServers": {
+    "metricsthinking": {
+      "command": "metricsthinking",
+      "args": ["mcp"]
+    }
+  }
+}
 ```
 
 ---
 
-## 7. Glosario de Dominio
+## 7. Protocolo de Ejecución y Verificación
+
+### 7.1. Auditorías Directas
+
+```bash
+# Ejecutar auditoría completa sobre el directorio actual
+metricsthinking audit --target . --out-dir artifacts
+
+# Ejecutar auditoría con perfil especializado en plataformas de datos
+metricsthinking audit --target . --profile data-platform --out-dir artifacts
+```
+
+### 7.2. Suite de Verificación y Pruebas de Invariantes
+
+```bash
+# Ejecutar suite de pruebas unitarias
+python -m pytest tests/ -v
+
+# Ejecutar linter estático
+ruff check src/ tests/ scripts/
+```
+
+---
+
+## 8. Glosario de Dominio
 
 * **Ground Truth:** Evidencia física tangible y contrastable en el repositorio (código fuente real, esquemas compilados, configuraciones y pruebas) en contraposición a documentación aspiracional.
 * **Módulo Canónico:** Una de las 10 etapas del ciclo de vida tecnológico evaluadas para cuantificar el avance real del proyecto.
@@ -186,7 +216,7 @@ ruff check src/ tests/
 
 ---
 
-## 8. Referencias Académicas y de Ingeniería
+## 9. Referencias Académicas y de Ingeniería
 
 1. IEEE Computer Society. *IEEE Standard for Software and System Test Documentation*. IEEE Std 829-2008.
 2. Fowler, M. *Continuous Integration*. Addison-Wesley, 2006.
