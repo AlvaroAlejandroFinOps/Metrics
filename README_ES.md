@@ -1,4 +1,4 @@
-# METRICSTHINKING: Motor Universal de Ingeniería Inversa y Auditoría por Ground Truth para Proyectos Tecnológicos
+# METRICS THINKING: Motor Universal de Ingeniería Inversa y Auditoría por Ground Truth para Proyectos Tecnológicos
 
 **Idioma:** [English](README.md) | [Español](README_ES.md)
 
@@ -9,6 +9,10 @@
 [![Licencia](https://img.shields.io/badge/Licencia-Apache%202.0-4b5563?style=flat-square)](LICENSE)
 
 ---
+
+##  Audita tu Repositorio con metodologias de software verification & validation.
+
+
 
 ## 1. Resumen Ejecutivo
 
