@@ -2,7 +2,7 @@
 """
 MetricsThinking™ Multi-Provider AI Skill Installer.
 Deploys skill definitions, prompt rules, and MCP configurations across AI environments:
-- Google Antigravity (Local & Global)
+- Google Antigravity (Local & Global) 
 - Anthropic Claude Code & Claude Desktop
 - Cursor IDE & Windsurf
 - GitHub Copilot & OpenAI
