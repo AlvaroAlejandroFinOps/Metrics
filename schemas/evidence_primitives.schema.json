@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metricsthinking.io/schemas/evidence_primitives.schema.json",
+  "title": "EvidencePrimitives",
+  "description": "Validation contract for v3.0 Universal Evidence Primitives summary.",
+  "type": "object",
+  "patternProperties": {
+    "^(config|spec|pipeline|verification|implementation)$": {
+      "type": "object",
+      "properties": {
+        "primitive_type": {
+          "type": "string",
+          "enum": ["config", "spec", "pipeline", "verification", "implementation"]
+        },
+        "file_count": { "type": "integer", "minimum": 0 },
+        "total_lines": { "type": "integer", "minimum": 0 },
+        "sample_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "verified_valid": { "type": "boolean" }
+      },
+      "required": ["primitive_type", "file_count", "total_lines", "sample_paths", "verified_valid"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

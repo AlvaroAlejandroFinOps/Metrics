@@ -76,7 +76,7 @@ class CriteriaEvaluator:
         return evaluated_modules
 
     # -------------------------------------------------------------------------
-    # Evaluation Rules (Ground Truth Verification)
+    # Evaluation Rules: M01 Discovery & Scope
     # -------------------------------------------------------------------------
 
     def check_problem_statement(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
@@ -87,7 +87,7 @@ class CriteriaEvaluator:
         # Check seeds first
         for s in ev.seeds:
             content = ev.file_cache.get(s, "").lower()
-            if any(term in content for term in ["problem statement", "declaración del problema", "misión", "propósito", "problema a resolver", "misión y propósito"]):
+            if any(term in content for term in ["problem statement", "declaración del problema", "misión", "propósito", "problema a resolver", "misión y propósito", "executive summary"]):
                 found_in = s
                 detail = f"Problem statement formalizado en '{s}'."
                 break
@@ -96,7 +96,7 @@ class CriteriaEvaluator:
         if not found_in:
             for r in ["README.md", "README_ES.md"]:
                 content = ev.file_cache.get(r, "").lower()
-                if any(term in content for term in ["problem statement", "problema", "misión", "propósito", "descripción", "misión y propósito"]):
+                if any(term in content for term in ["problem statement", "problema", "misión", "propósito", "descripción", "misión y propósito", "overview"]):
                     found_in = r
                     detail = f"Problem statement y propósito declarados en '{r}'."
                     break
@@ -126,7 +126,7 @@ class CriteriaEvaluator:
 
         for s in ev.seeds:
             content = ev.file_cache.get(s, "").lower()
-            if "scope" in content or "alcance" in content or "límites" in content or "ámbito de aplicación" in content:
+            if any(k in content for k in ["scope", "alcance", "límites", "ámbito de aplicación", "in-scope", "out-of-scope"]):
                 found_in = s
                 detail = f"Límites de alcance y fronteras del sistema identificados en '{s}'."
                 break
@@ -134,7 +134,7 @@ class CriteriaEvaluator:
         if not found_in:
             for r in ["README.md", "README_ES.md"]:
                 content = ev.file_cache.get(r, "").lower()
-                if "scope" in content or "alcance" in content or "ámbito" in content:
+                if any(k in content for k in ["scope", "alcance", "ámbito", "boundaries", "límites"]):
                     found_in = r
                     detail = f"Alcance declarado en '{r}'."
                     break
@@ -163,7 +163,7 @@ class CriteriaEvaluator:
 
         for s in ev.seeds:
             content = ev.file_cache.get(s, "").lower()
-            if any(term in content for term in ["casos de uso", "use cases", "personas", "actores", "perfiles", "consumidores"]):
+            if any(term in content for term in ["casos de uso", "use cases", "personas", "actores", "perfiles", "consumidores", "stakeholders"]):
                 found_in = s
                 detail = f"Perfiles de uso y casos definidos en '{s}'."
                 break
@@ -171,7 +171,7 @@ class CriteriaEvaluator:
         if not found_in:
             for doc in ev.docs:
                 content = ev.file_cache.get(doc, "").lower()
-                if any(term in content for term in ["casos de uso", "use cases", "perfiles de usuario", "persona lenses", "actores", "perfiles"]):
+                if any(term in content for term in ["casos de uso", "use cases", "perfiles de usuario", "persona lenses", "actores", "perfiles", "consumidores"]):
                     found_in = doc
                     detail = f"Casos de uso y perfiles formalizados en '{doc}'."
                     break
@@ -190,9 +190,13 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M02 Architecture & Design
+    # -------------------------------------------------------------------------
+
     def check_ast_models(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Verifies decoupled AST or domain models."""
-        ast_files = [f for f in ev.source_files if any(p in f.lower() for p in ["ast", "models", "entities", "schema"])]
+        ast_files = [f for f in ev.source_files if any(p in f.lower() for p in ["ast", "models", "entities", "schema", "contracts"])]
         if ast_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -200,6 +204,15 @@ class CriteriaEvaluator:
                 fulfilled=True,
                 evidence_path=ast_files[0],
                 evidence_detail=f"Modelos de dominio canónicos detectados en {len(ast_files)} archivos (e.g. '{ast_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        if ev.schemas:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.schemas[0],
+                evidence_detail=f"Modelos declarativos estructurados en esquemas ({len(ev.schemas)} esquemas, e.g. '{ev.schemas[0]}').",
                 remediation_hint=cfg.get("hint")
             )
         return AuditCriterion(
@@ -225,7 +238,7 @@ class CriteriaEvaluator:
         # Check seeds and docs for ADR section
         for s in ev.seeds + ev.docs:
             content = ev.file_cache.get(s, "").lower()
-            if "adr-" in content or "decisiones arquitectónicas" in content or "architectural decisions" in content:
+            if any(k in content for k in ["adr-", "decisiones arquitectónicas", "architectural decisions", "decisiones de diseño", "decisiones técnicas"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -254,6 +267,17 @@ class CriteriaEvaluator:
                 evidence_detail=f"Contratos formales de datos / esquemas presentes ({len(ev.schemas)} esquemas, e.g. '{ev.schemas[0]}').",
                 remediation_hint=cfg.get("hint")
             )
+        spec_summary = ev.evidence_primitives.get("spec")
+        if spec_summary and spec_summary.file_count > 0:
+            sample = spec_summary.sample_paths[0] if spec_summary.sample_paths else "specs/"
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sample,
+                evidence_detail=f"Especificaciones y esquemas formales detectados ({spec_summary.file_count} archivos, e.g. '{sample}').",
+                remediation_hint=cfg.get("hint")
+            )
         return AuditCriterion(
             criterion_id=cfg["id"],
             name=cfg["name"],
@@ -265,7 +289,7 @@ class CriteriaEvaluator:
 
     def check_graphs_topology(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for topological graphs or dependency DAG."""
-        if ".context/tree.json" in ev.context_files:
+        if ".context/tree.json" in ev.context_files or ".context/tree.json" in ev.rel_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
                 name=cfg["name"],
@@ -275,7 +299,7 @@ class CriteriaEvaluator:
                 remediation_hint=cfg.get("hint")
             )
 
-        graph_files = [f for f in ev.source_files if any(k in f.lower() for k in ["graph", "dag", "topology", "tree", "lineage"])]
+        graph_files = [f for f in ev.source_files + ev.rel_files if any(k in f.lower() for k in ["graph", "dag", "topology", "tree", "lineage", "pipeline"])]
         if graph_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -295,10 +319,14 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M03 Governance & Compliance
+    # -------------------------------------------------------------------------
+
     def check_pii(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for PII classification or privacy protections."""
         for s in ev.source_files + ev.schemas:
-            if any(k in s.lower() for k in ["pii", "privacy", "mask", "anonym", "security"]):
+            if any(k in s.lower() for k in ["pii", "privacy", "mask", "anonym", "security", "sanitize"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -311,7 +339,7 @@ class CriteriaEvaluator:
         # Check seeds and docs
         for seed in ev.seeds + ev.docs:
             content = ev.file_cache.get(seed, "").lower()
-            if "pii" in content or "privacidad" in content:
+            if any(k in content for k in ["pii", "privacidad", "privacy", "anonimización", "sanitization", "masking"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -332,7 +360,7 @@ class CriteriaEvaluator:
 
     def check_quality_rules(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for quality rules, cQS scores, or data validators."""
-        quality_files = [f for f in ev.source_files if any(k in f.lower() for k in ["quality", "validator", "rules", "cqs", "lint"])]
+        quality_files = [f for f in ev.source_files if any(k in f.lower() for k in ["quality", "validator", "rules", "cqs", "lint", "check"])]
         if quality_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -391,6 +419,10 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M04 Provisioning & Readiness
+    # -------------------------------------------------------------------------
+
     def check_reproducible_env(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for package manifest or reproducible environment."""
         if ev.manifests:
@@ -401,6 +433,17 @@ class CriteriaEvaluator:
                 fulfilled=True,
                 evidence_path=first_manifest,
                 evidence_detail=f"Manifiesto de empaquetado y entorno reproducible verificado en '{first_manifest}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        config_summary = ev.evidence_primitives.get("config")
+        if config_summary and config_summary.file_count > 0:
+            sample = config_summary.sample_paths[0] if config_summary.sample_paths else "config/"
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sample,
+                evidence_detail=f"Configuraciones de entorno declarativas identificadas ({config_summary.file_count} archivos, e.g. '{sample}').",
                 remediation_hint=cfg.get("hint")
             )
         return AuditCriterion(
@@ -425,6 +468,16 @@ class CriteriaEvaluator:
                     evidence_detail=f"Especificación estricta de versiones de dependencias verificada en '{man_path}'.",
                     remediation_hint=cfg.get("hint")
                 )
+        if any(f.endswith(".lock") or "lock" in f.lower() for f in ev.rel_files):
+            lockfile = [f for f in ev.rel_files if f.endswith(".lock") or "lock" in f.lower()][0]
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=lockfile,
+                evidence_detail=f"Lockfile determinista verificado en '{lockfile}'.",
+                remediation_hint=cfg.get("hint")
+            )
         return AuditCriterion(
             criterion_id=cfg["id"],
             name=cfg["name"],
@@ -436,7 +489,7 @@ class CriteriaEvaluator:
 
     def check_fixtures(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for fixtures or test sample data."""
-        fixture_files = [f for f in ev.rel_files if "fixture" in f.lower() or "tests/data" in f.lower() or "data/processed" in f.lower() or "data_generation" in f.lower()]
+        fixture_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["fixture", "tests/data", "data/processed", "data_generation", "mock", "sample", "seeds/"])]
         if fixture_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -455,9 +508,13 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M05 Core Engine & Construction
+    # -------------------------------------------------------------------------
+
     def check_parsers(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for functional parsers or ingestion routines."""
-        parsers = [f for f in ev.source_files if any(k in f.lower() for k in ["parser", "reader", "ingest", "loader", "scanner", "collector"])]
+        parsers = [f for f in ev.source_files if any(k in f.lower() for k in ["parser", "reader", "ingest", "loader", "scanner", "collector", "extractor"])]
         if parsers:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -465,6 +522,17 @@ class CriteriaEvaluator:
                 fulfilled=True,
                 evidence_path=parsers[0],
                 evidence_detail=f"Módulos de parseo e ingesta identificados en '{parsers[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        impl_summary = ev.evidence_primitives.get("implementation")
+        if impl_summary and impl_summary.file_count > 0:
+            sample = impl_summary.sample_paths[0] if impl_summary.sample_paths else "src/"
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sample,
+                evidence_detail=f"Módulos de procesamiento e implementación activos ({impl_summary.file_count} archivos, e.g. '{sample}').",
                 remediation_hint=cfg.get("hint")
             )
         return AuditCriterion(
@@ -478,7 +546,7 @@ class CriteriaEvaluator:
 
     def check_inference_engine(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for core engine / inference / business logic modules."""
-        engines = [f for f in ev.source_files if any(k in f.lower() for k in ["engine", "inference", "transform", "compute", "core", "evaluator", "scorer"])]
+        engines = [f for f in ev.source_files if any(k in f.lower() for k in ["engine", "inference", "transform", "compute", "core", "evaluator", "scorer", "service", "handler"])]
         if engines:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -486,6 +554,17 @@ class CriteriaEvaluator:
                 fulfilled=True,
                 evidence_path=engines[0],
                 evidence_detail=f"Motor nuclear de procesamiento y lógica operativa verificado en '{engines[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        impl_summary = ev.evidence_primitives.get("implementation")
+        if impl_summary and impl_summary.file_count >= 2:
+            sample = impl_summary.sample_paths[0]
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sample,
+                evidence_detail=f"Lógica nuclear de implementación presente en {impl_summary.file_count} módulos.",
                 remediation_hint=cfg.get("hint")
             )
         return AuditCriterion(
@@ -499,7 +578,7 @@ class CriteriaEvaluator:
 
     def check_relation_resolver(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for relationship resolver, cycles, or dependencies."""
-        resolvers = [f for f in ev.source_files if any(k in f.lower() for k in ["resolver", "relation", "dependency", "cycle", "order", "dag"])]
+        resolvers = [f for f in ev.source_files if any(k in f.lower() for k in ["resolver", "relation", "dependency", "cycle", "order", "dag", "router", "orchestrat"])]
         if resolvers:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -529,7 +608,7 @@ class CriteriaEvaluator:
 
     def check_metric_generator(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for metric calculation or synthesis generators."""
-        gens = [f for f in ev.source_files if any(k in f.lower() for k in ["generator", "metric", "measure", "scorer", "calc", "kpi"])]
+        gens = [f for f in ev.source_files if any(k in f.lower() for k in ["generator", "metric", "measure", "scorer", "calc", "kpi", "telemetry", "dora", "score"])]
         if gens:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -548,9 +627,13 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M06 Integration & Interoperability
+    # -------------------------------------------------------------------------
+
     def check_emitters(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for native emitters or platform-specific exporters."""
-        emitters = [f for f in ev.source_files if any(k in f.lower() for k in ["emitter", "exporter", "target", "writer", "renderer", "tmdl", "sql", "output"])]
+        emitters = [f for f in ev.source_files if any(k in f.lower() for k in ["emitter", "exporter", "target", "writer", "renderer", "tmdl", "sql", "output", "adapter", "client", "connector"])]
         if emitters:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -573,7 +656,7 @@ class CriteriaEvaluator:
         """Checks for atomic write and UTF-8 safe encoding."""
         for s in ev.source_files:
             content = ev.file_cache.get(s, "")
-            if "utf-8" in content.lower() or "encoding" in content.lower() or "atomic" in content.lower() or "tempfile" in content.lower():
+            if any(k in content.lower() for k in ["utf-8", "encoding", "atomic", "tempfile", "safewrite", "lock"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -594,7 +677,7 @@ class CriteriaEvaluator:
     def check_multi_format(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks if multi-format outputs are supported (JSON, Markdown, etc.)."""
         formats_found = set(ev.file_extensions.keys())
-        if len(formats_found.intersection({".json", ".md", ".yaml", ".parquet", ".csv"})) >= 2:
+        if len(formats_found.intersection({".json", ".md", ".yaml", ".parquet", ".csv", ".tf", ".proto"})) >= 2:
             return AuditCriterion(
                 criterion_id=cfg["id"],
                 name=cfg["name"],
@@ -612,6 +695,10 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M07 QA & Stress Testing
+    # -------------------------------------------------------------------------
+
     def check_test_coverage(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks test existence and pass rate."""
         if ev.tests:
@@ -621,6 +708,17 @@ class CriteriaEvaluator:
                 fulfilled=True,
                 evidence_path=ev.tests[0],
                 evidence_detail=f"Suite de pruebas presente ({len(ev.tests)} archivos de prueba en tests/, e.g. '{ev.tests[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        verif_summary = ev.evidence_primitives.get("verification")
+        if verif_summary and verif_summary.file_count > 0:
+            sample = verif_summary.sample_paths[0] if verif_summary.sample_paths else "tests/"
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sample,
+                evidence_detail=f"Artefactos de verificación y testing identificados ({verif_summary.file_count} archivos, e.g. '{sample}').",
                 remediation_hint=cfg.get("hint")
             )
         return AuditCriterion(
@@ -634,7 +732,7 @@ class CriteriaEvaluator:
 
     def check_golden_tests(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for golden regression tests or deterministic snapshots."""
-        golden = [f for f in ev.tests + ev.rel_files if any(k in f.lower() for k in ["golden", "snapshot", "regression", "baseline"])]
+        golden = [f for f in ev.tests + ev.rel_files if any(k in f.lower() for k in ["golden", "snapshot", "regression", "baseline", "expected"])]
         if golden:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -655,7 +753,7 @@ class CriteriaEvaluator:
 
     def check_stress_tests(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for stress, benchmark, or volumetric tests."""
-        stress = [f for f in ev.tests + ev.tools_and_scripts if any(k in f.lower() for k in ["stress", "benchmark", "load", "perf", "volum"])]
+        stress = [f for f in ev.tests + ev.tools_and_scripts if any(k in f.lower() for k in ["stress", "benchmark", "load", "perf", "volum", "scale", "fuzz"])]
         if stress:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -674,9 +772,13 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M08 Validation & Leadership Cockpits
+    # -------------------------------------------------------------------------
+
     def check_persona_lenses(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for persona lenses or role projections."""
-        personas = [f for f in ev.source_files + ev.docs if "persona" in f.lower() or "lens" in f.lower() or "role" in f.lower()]
+        personas = [f for f in ev.source_files + ev.docs if any(k in f.lower() for k in ["persona", "lens", "role", "scorecard", "view"])]
         if personas:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -706,7 +808,7 @@ class CriteriaEvaluator:
                 evidence_detail=f"Módulos de dashboard / cockpit operativo presentes en '{ev.dashboards[0]}'.",
                 remediation_hint=cfg.get("hint")
             )
-        bi_files = [f for f in ev.source_files if any(k in f.lower() for k in ["cockpit", "report", "summary", "viz", "renderer"])]
+        bi_files = [f for f in ev.source_files if any(k in f.lower() for k in ["cockpit", "report", "summary", "viz", "renderer", "dashboard"])]
         if bi_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -727,7 +829,7 @@ class CriteriaEvaluator:
 
     def check_cli_tool(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for CLI command-line interface tool."""
-        cli_files = [f for f in ev.source_files + ev.tools_and_scripts if any(k in f.lower() for k in ["cli", "main.py", "app.py"])]
+        cli_files = [f for f in ev.source_files + ev.tools_and_scripts if any(k in f.lower() for k in ["cli", "main.py", "app.py", "manage.py"])]
         if cli_files:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -746,9 +848,13 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M09 CI/CD & Automation
+    # -------------------------------------------------------------------------
+
     def check_ci_pipeline(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for CI/CD workflow automation."""
-        ci_actions = [f for f in ev.ci_workflows if ".github/workflows" in f or ".gitlab-ci" in f or "azure-pipelines" in f]
+        ci_actions = [f for f in ev.ci_workflows if any(k in f for k in [".github/workflows", ".gitlab-ci", "azure-pipelines", "jenkins", "argo"])]
         if ci_actions:
             return AuditCriterion(
                 criterion_id=cfg["id"],
@@ -756,6 +862,17 @@ class CriteriaEvaluator:
                 fulfilled=True,
                 evidence_path=ci_actions[0],
                 evidence_detail=f"Pipeline de integración continua automatizado verificado en '{ci_actions[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        pipeline_summary = ev.evidence_primitives.get("pipeline")
+        if pipeline_summary and pipeline_summary.file_count > 0:
+            sample = pipeline_summary.sample_paths[0] if pipeline_summary.sample_paths else ".github/workflows/"
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sample,
+                evidence_detail=f"Pipelines de orquestación y automatización activos ({pipeline_summary.file_count} archivos, e.g. '{sample}').",
                 remediation_hint=cfg.get("hint")
             )
         return AuditCriterion(
@@ -771,7 +888,7 @@ class CriteriaEvaluator:
         """Checks for packaging or pre-commit config."""
         for man_path in ev.manifests:
             content = ev.file_cache.get(man_path, "")
-            if "[build-system]" in content or "scripts" in content or "entry-points" in content or "bin" in content or "project" in content:
+            if any(k in content for k in ["[build-system]", "scripts", "entry-points", "bin", "project", "helm", "kustomize"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -780,8 +897,8 @@ class CriteriaEvaluator:
                     evidence_detail=f"Configuración de empaquetado estándar/entry points verificada en '{man_path}'.",
                     remediation_hint=cfg.get("hint")
                 )
-        if any("dockerfile" in f.lower() or ".pre-commit" in f.lower() for f in ev.ci_workflows + ev.rel_files):
-            entry = [f for f in ev.rel_files if "dockerfile" in f.lower() or ".pre-commit" in f.lower()][0]
+        if any(k in f.lower() for f in ev.ci_workflows + ev.rel_files for k in ["dockerfile", ".pre-commit", "chart.yaml", "kustomization.yaml"]):
+            entry = [f for f in ev.rel_files if any(k in f.lower() for k in ["dockerfile", ".pre-commit", "chart.yaml", "kustomization.yaml"])][0]
             return AuditCriterion(
                 criterion_id=cfg["id"],
                 name=cfg["name"],
@@ -798,6 +915,10 @@ class CriteriaEvaluator:
             evidence_detail="Falta estandarización formal de empaquetado o pre-commit hooks.",
             remediation_hint=cfg.get("hint")
         )
+
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: M10 Documentation, Seed & Roadmap
+    # -------------------------------------------------------------------------
 
     def check_technical_seed(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for complete technical seed or architecture memory."""
@@ -823,7 +944,7 @@ class CriteriaEvaluator:
         """Checks if CLI help or operational guide is documented."""
         for r in ["README.md", "README_ES.md"] + ev.docs:
             content = ev.file_cache.get(r, "").lower()
-            if "--help" in content or "comandos" in content or "usage" in content or "guía de uso" in content:
+            if any(k in content for k in ["--help", "comandos", "usage", "guía de uso", "runbook", "guía de operación", "getting started"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -844,7 +965,7 @@ class CriteriaEvaluator:
     def check_adapters_roadmap(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for extensible adapter interfaces or documented roadmap."""
         for f in ev.source_files:
-            if "adapter" in f.lower() or "target" in f.lower() or "base" in f.lower() or "profile" in f.lower():
+            if any(k in f.lower() for k in ["adapter", "target", "base", "profile", "plugin", "extension"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -855,7 +976,7 @@ class CriteriaEvaluator:
                 )
         for s in ev.seeds + ev.docs:
             content = ev.file_cache.get(s, "").lower()
-            if "roadmap" in content or "futuro" in content or "extensibilidad" in content:
+            if any(k in content for k in ["roadmap", "futuro", "extensibilidad", "hoja de ruta", "next steps"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
                     name=cfg["name"],
@@ -873,6 +994,898 @@ class CriteriaEvaluator:
             remediation_hint=cfg.get("hint")
         )
 
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: Domain-Specific Archetype Checks (v3.0)
+    # -------------------------------------------------------------------------
+
+    # --- MLOps ---
+    def check_model_cards(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Model Card documentation (model_card.md, README-model.md, etc.)."""
+        for f in ev.docs + ev.seeds + ev.rel_files:
+            lower = f.lower()
+            if "model_card" in lower or "model-card" in lower or "model_cards" in lower:
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Model Card formal identificado en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+            content = ev.file_cache.get(f, "").lower()
+            if "model card" in content or "tarjeta de modelo" in content:
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Sección de Model Card formal documentada en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró Model Card formal ni especificación de consumidores de ML.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_model_registry(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for model registry configuration (MLflow, W&B, Vertex AI, models/)."""
+        registry_files = [f for f in ev.source_files + ev.rel_files if any(k in f.lower() for k in ["mlflow", "wandb", "registry", "checkpoint", "models/", "artifacts/models"])]
+        if registry_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=registry_files[0],
+                evidence_detail=f"Configuración de Model Registry / Experiment Tracking detectada en '{registry_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectó configuración de registro de modelos ni tracking de artefactos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_data_drift(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for data drift and concept drift detectors (Evidently, Deepchecks, etc.)."""
+        drift_files = [f for f in ev.source_files + ev.tests + ev.rel_files if any(k in f.lower() for k in ["drift", "evidently", "deepchecks", "greatexpectations", "great_expectations", "monitoring/drift"])]
+        if drift_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=drift_files[0],
+                evidence_detail=f"Módulos de detección de Data Drift y degradación identificados en '{drift_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron módulos de monitoreo de Data Drift ni degradación estadística.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_training_pipeline(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for ML training pipelines (train.py, Kubeflow, Vertex AI, SageMaker)."""
+        train_files = [f for f in ev.source_files + ev.rel_files if any(k in f.lower() for k in ["train", "pipeline_ml", "training", "kubeflow", "vertex", "sagemaker", "fit"])]
+        if train_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=train_files[0],
+                evidence_detail=f"Pipeline de entrenamiento orquestado verificado en '{train_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró pipeline de entrenamiento orquestado de modelos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- LLMOps / GenAIOps ---
+    def check_context_engineering(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for context engineering, chunking, embeddings, or vectorstore modules."""
+        ctx_files = [f for f in ev.source_files + ev.rel_files if any(k in f.lower() for k in ["context", "chunk", "embed", "vector", "chroma", "pinecone", "qdrant", "faiss", "retriever", "rag"])]
+        if ctx_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ctx_files[0],
+                evidence_detail=f"Arquitectura de Context Engineering / Vectorstores identificada en '{ctx_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron módulos de gestión de contexto, chunking ni almacenamiento vectorial.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_guardrails(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for LLM guardrails, safety detectors, or moderation filters."""
+        guard_files = [f for f in ev.source_files + ev.rel_files if any(k in f.lower() for k in ["guardrail", "safety", "moderation", "jailbreak", "nemo", "filter", "sanitiz"])]
+        if guard_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=guard_files[0],
+                evidence_detail=f"Políticas de guardrails y seguridad GenAI detectadas en '{guard_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron guardrails de seguridad ni filtros de moderación para LLMs.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_prompt_registry(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for versioned prompt templates or prompt registry."""
+        prompt_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["prompts/", "prompt_", "templates/prompts", "system_prompt"])]
+        if prompt_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=prompt_files[0],
+                evidence_detail=f"Catálogo de prompt templates versionado presente en '{prompt_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró registro ni catálogo versionado de prompts.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_eval_suites(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for LLM evaluation suites (RAGAS, DeepEval, TruLens, etc.)."""
+        eval_files = [f for f in ev.tests + ev.source_files + ev.rel_files if any(k in f.lower() for k in ["ragas", "deepeval", "trulens", "evals/", "eval_", "benchmark_llm"])]
+        if eval_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=eval_files[0],
+                evidence_detail=f"Suite de evaluación automática de LLMs verificada en '{eval_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron suites de evaluación semántica (RAGAS / DeepEval / TruLens).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- DataOps ---
+    def check_data_contracts(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for declarative data contracts (SodaCL, OpenDataContract, contracts/)."""
+        contract_files = [f for f in ev.schemas + ev.rel_files if any(k in f.lower() for k in ["datacontract", "data_contract", "contracts/", "soda", "expectations"])]
+        if contract_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=contract_files[0],
+                evidence_detail=f"Contratos formales de datos (Data Contracts) identificados en '{contract_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron Data Contracts formales para entidades de datos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_lineage_graph(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for data lineage graphs (dbt DAG, OpenLineage, etc.)."""
+        lineage_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["dbt_project", "manifest.json", "lineage", "openlineage", "dag"])]
+        if lineage_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=lineage_files[0],
+                evidence_detail=f"Grafo de linaje de datos identificado en '{lineage_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró grafo de linaje de datos ni proyecto dbt formal.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_data_sla(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for data SLAs and freshness checks."""
+        sla_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["freshness", "sla", "staleness", "checkpoint", "alert"])]
+        if sla_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sla_files[0],
+                evidence_detail=f"Políticas de SLA y frescura de datos detectadas en '{sla_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron verificaciones de frescura ni SLAs de datos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_reconciliation(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for source-to-target data reconciliation and balancing checks."""
+        recon_files = [f for f in ev.source_files + ev.tests if any(k in f.lower() for k in ["reconcil", "balance", "checksum", "audit_table", "diff"])]
+        if recon_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=recon_files[0],
+                evidence_detail=f"Mecanismos de reconciliación y cuadre de datos verificados en '{recon_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron rutinas de reconciliación ni cuadres numéricos de datos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- GitOps ---
+    def check_declarative_k8s(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for declarative Kubernetes manifests, Helm charts, or Kustomize overlays."""
+        k8s_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["manifests/", "k8s/", "charts/", "kustomization", "helm", "chart.yaml"])]
+        if k8s_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=k8s_files[0],
+                evidence_detail=f"Manifiestos declarativos Kubernetes/Helm detectados ({len(k8s_files)} archivos, e.g. '{k8s_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron manifiestos declarativos de Kubernetes, Helm ni Kustomize.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_sync_controllers(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for ArgoCD Applications or Flux Kustomization CRDs."""
+        sync_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["application.yaml", "applicationset", "flux", "helmrelease", "kustomization.yaml", "gitops/"])]
+        if sync_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sync_files[0],
+                evidence_detail=f"Controladores de sincronización GitOps configurados en '{sync_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron recursos ArgoCD Application ni Flux Kustomization.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_drift_detection(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for automated drift detection or self-healing reconciliation policies."""
+        for f in ev.rel_files:
+            if any(k in f.lower() for k in ["argocd", "flux", "terraform.tfstate", "drift"]):
+                content = ev.file_cache.get(f, "").lower()
+                if any(k in content for k in ["selfheal", "prune", "syncpolicy", "drift", "automated"]):
+                    return AuditCriterion(
+                        criterion_id=cfg["id"],
+                        name=cfg["name"],
+                        fulfilled=True,
+                        evidence_path=f,
+                        evidence_detail=f"Políticas de self-healing y detección de deriva verificadas en '{f}'.",
+                        remediation_hint=cfg.get("hint")
+                    )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron políticas de autoreparación (self-healing) ni control de deriva.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_immutable_releases(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks that container manifests use immutable image digests or strict semantic tags."""
+        for f in ev.rel_files:
+            if any(k in f.lower() for k in ["deployment", "values.yaml", "kustomization"]):
+                content = ev.file_cache.get(f, "")
+                if "sha256:" in content or re.search(r"image:\s*[\w./-]+:\d+\.\d+", content):
+                    return AuditCriterion(
+                        criterion_id=cfg["id"],
+                        name=cfg["name"],
+                        fulfilled=True,
+                        evidence_path=f,
+                        evidence_detail=f"Uso de releases inmutables o digests SHA256 verificado en '{f}'.",
+                        remediation_hint=cfg.get("hint")
+                    )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Los manifiestos no fijan digests inmutables ni tags semánticos de contenedor.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- Platform Engineering ---
+    def check_service_catalog(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Backstage catalog-info.yaml or internal service catalog definitions."""
+        catalog_files = [f for f in ev.rel_files if "catalog-info.yaml" in f.lower() or "catalog/" in f.lower() or "services.yaml" in f.lower()]
+        if catalog_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=catalog_files[0],
+                evidence_detail=f"Catálogo de servicios (Backstage Service Catalog) presente en '{catalog_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró archivo catalog-info.yaml ni definición de catálogo de servicios.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_iac_modules(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for reusable IaC modules (Terraform, OpenTofu, Pulumi, Crossplane)."""
+        iac_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["modules/", "terraform/", "tofu/", "pulumi/", ".tf"])]
+        if iac_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=iac_files[0],
+                evidence_detail=f"Módulos reutilizables de Infraestructura como Código presentes ({len(iac_files)} archivos, e.g. '{iac_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron módulos desacoplados de Infraestructura como Código (IaC).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_golden_paths(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Golden Path templates (Cookiecutter, Copier, Scaffolder)."""
+        template_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["template", "cookiecutter", "scaffolder", "copier", "skeletons/"])]
+        if template_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=template_files[0],
+                evidence_detail=f"Plantillas Golden Path de autoservicio detectadas en '{template_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron plantillas Golden Path ni generadores estandarizados.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_developer_portal(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for developer portal integration (Backstage, TechDocs, etc.)."""
+        portal_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["techdocs", "backstage", "portal", "mkdocs.yml"])]
+        if portal_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=portal_files[0],
+                evidence_detail=f"Integración de Portal de Desarrollador / TechDocs verificada en '{portal_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Falta integración con portal de desarrolladores o documentación TechDocs.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- DevSecOps ---
+    def check_policy_as_code(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Policy-as-Code definitions (OPA, Rego, Kyverno, Gatekeeper, Checkov)."""
+        policy_files = [f for f in ev.rel_files if any(k in f.lower() for k in [".rego", "policies/", "kyverno", "gatekeeper", "conftest", "checkov"])]
+        if policy_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=policy_files[0],
+                evidence_detail=f"Políticas de seguridad como código (Policy-as-Code) verificadas en '{policy_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron políticas ejecutables como código (OPA / Rego / Kyverno).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_secret_scanning(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for secret scanning configs (Gitleaks, Trufflehog, detect-secrets)."""
+        secret_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["gitleaks", "trufflehog", "detect-secrets", ".secrets", "vault", "sops"])]
+        if secret_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=secret_files[0],
+                evidence_detail=f"Configuración de escaneo y gestión de secretos detectada en '{secret_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectó configuración de escaneo de secretos en pre-commit ni en CI.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_sbom_generation(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for SBOM generation (Syft, Trivy, CycloneDX, SPDX)."""
+        sbom_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["sbom", "cyclonedx", "spdx", "syft", "trivy"])]
+        if sbom_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sbom_files[0],
+                evidence_detail=f"Generación de SBOM (Software Bill of Materials) identificada en '{sbom_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Falta automatización de generación de SBOM (CycloneDX / SPDX).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_sast_dast(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for SAST / DAST tools configuration (Semgrep, Sonar, Bandit, CodeQL)."""
+        sast_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["semgrep", "sonar", "bandit", "codeql", "zap", "snyk"])]
+        if sast_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=sast_files[0],
+                evidence_detail=f"Herramientas de análisis de seguridad estático/dinámico (SAST/DAST) configuradas en '{sast_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectó configuración de herramientas SAST/DAST en el repositorio.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- Dual-Track Agile ---
+    def check_opportunity_tree(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Opportunity Solution Tree or Product Framing."""
+        for f in ev.docs + ev.seeds:
+            content = ev.file_cache.get(f, "").lower()
+            if any(k in content for k in ["opportunity tree", "árbol de oportunidades", "discovery", "product framing", "opportunity solution"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Árbol de oportunidades o marco de discovery documentado en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró Opportunity Solution Tree ni marco de continuous discovery.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_user_interviews(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for user research synthesis or customer interviews."""
+        research_files = [f for f in ev.docs + ev.rel_files if any(k in f.lower() for k in ["research", "interviews", "entrevistas", "empathy", "feedback"])]
+        if research_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=research_files[0],
+                evidence_detail=f"Síntesis de investigación de usuarios documentada en '{research_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron evidencias de investigación de usuarios ni entrevistas continuas.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_hypothesis_cards(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for hypothesis cards or structured experiment declarations."""
+        for f in ev.docs + ev.seeds:
+            content = ev.file_cache.get(f, "").lower()
+            if any(k in content for k in ["hypothesis", "hipótesis", "tarjeta de hipótesis", "experimento", "experiment card"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Tarjetas de hipótesis de producto formalizadas en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron tarjetas formales de hipótesis de producto.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_feature_flags(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for feature flag configuration (Unleash, LaunchDarkly, Flipt, toggles)."""
+        flag_files = [f for f in ev.source_files + ev.rel_files if any(k in f.lower() for k in ["unleash", "launchdarkly", "flipt", "feature_flag", "flags.yaml", "toggles"])]
+        if flag_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=flag_files[0],
+                evidence_detail=f"Infraestructura de Feature Flags identificada en '{flag_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró configuración de Feature Flags para desacoplar releases.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- Team Topologies ---
+    def check_team_contracts(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Team API contracts, charters, or ownership definitions."""
+        team_files = [f for f in ev.docs + ev.rel_files if any(k in f.lower() for k in ["team_api", "team-api", "charter", "teams/", "ownership", "codeowners"])]
+        if team_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=team_files[0],
+                evidence_detail=f"Contratos de Team API / Ownership identificados en '{team_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron Team APIs ni especificaciones formales de propiedad de equipos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_domain_boundaries(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Bounded Contexts (DDD) or clear domain boundaries."""
+        for f in ev.docs + ev.seeds + ev.source_files:
+            lower = f.lower()
+            if "bounded_context" in lower or "context_map" in lower:
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Mapeo de Bounded Contexts y límites de dominio identificado en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+            content = ev.file_cache.get(f, "").lower()
+            if any(k in content for k in ["bounded context", "context map", "límites de dominio", "lenguaje ubicuo"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Fronteras de dominio DDD formalizadas en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron delimitaciones de Bounded Contexts ni mapas de contexto.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_cognitive_load(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for cognitive load evaluations or team sizing bounds."""
+        for f in ev.docs + ev.seeds:
+            content = ev.file_cache.get(f, "").lower()
+            if any(k in content for k in ["carga cognitiva", "cognitive load", "team size", "responsabilidad acotada"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Evaluación de carga cognitiva de equipos documentada en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Falta evaluación explícita de carga cognitiva por equipo.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_interaction_modes(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for defined team interaction modes (Collaboration, X-as-a-Service, Facilitating)."""
+        for f in ev.docs + ev.seeds:
+            content = ev.file_cache.get(f, "").lower()
+            if any(k in content for k in ["collaboration", "x-as-a-service", "facilitating", "modos de interacción", "interaction modes"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Modos de interacción entre equipos documentados en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se declararon modos formales de interacción inter-equipos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- Chaos Engineering ---
+    def check_blast_radius(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for blast radius constraints and automatic abort triggers."""
+        for f in ev.rel_files:
+            if any(k in f.lower() for k in ["chaos", "resilience", "litmus"]):
+                content = ev.file_cache.get(f, "").lower()
+                if any(k in content for k in ["abort", "blast_radius", "rollback", "safeguard", "stop"]):
+                    return AuditCriterion(
+                        criterion_id=cfg["id"],
+                        name=cfg["name"],
+                        fulfilled=True,
+                        evidence_path=f,
+                        evidence_detail=f"Restricciones de radio de explosión y parada de emergencia identificadas en '{f}'.",
+                        remediation_hint=cfg.get("hint")
+                    )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron restricciones de blast radius ni abort triggers automáticos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_steady_state(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Steady-State Hypothesis metrics and SLO baseline queries."""
+        for f in ev.rel_files:
+            if any(k in f.lower() for k in ["steady_state", "chaos", "slo", "resilience"]):
+                content = ev.file_cache.get(f, "").lower()
+                if any(k in content for k in ["steady_state", "estado estacionario", "slo", "sli", "baseline"]):
+                    return AuditCriterion(
+                        criterion_id=cfg["id"],
+                        name=cfg["name"],
+                        fulfilled=True,
+                        evidence_path=f,
+                        evidence_detail=f"Hipótesis de estado estacionario y métricas baseline verificadas en '{f}'.",
+                        remediation_hint=cfg.get("hint")
+                    )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró definición cuantitativa de hipótesis de estado estacionario.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_fault_injection(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Chaos Mesh, Litmus, or Gremlin fault injection experiment files."""
+        chaos_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["chaos", "networkchaos", "podchaos", "stresschaos", "litmus", "fault_injection"])]
+        if chaos_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=chaos_files[0],
+                evidence_detail=f"Experimentos de inyección de fallos configurados en '{chaos_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron manifiestos ni scripts de inyección de fallos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_game_days(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for Game Day runbooks and blameless post-mortem templates."""
+        game_files = [f for f in ev.docs + ev.rel_files if any(k in f.lower() for k in ["game_day", "gameday", "postmortem", "post_mortem", "runbook_chaos"])]
+        if game_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=game_files[0],
+                evidence_detail=f"Guías de Game Days y plantillas de post-mortem identificadas en '{game_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Falta documentación de Game Days y plantillas de post-mortem.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # --- Spec-Driven Development (SDD) ---
+    def check_api_contracts(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for formal OpenAPI, AsyncAPI, Protobuf, or GraphQL specifications."""
+        api_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["openapi", "asyncapi", ".proto", ".graphql", ".gql", "swagger", "specs/"])]
+        if api_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=api_files[0],
+                evidence_detail=f"Especificaciones formales de contrato detectadas ({len(api_files)} archivos, e.g. '{api_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron contratos formales OpenAPI, AsyncAPI ni Protobuf.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_spectral_linter(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for OpenAPI/AsyncAPI specification linters (Spectral, Vacuum, Buf)."""
+        lint_files = [f for f in ev.rel_files if any(k in f.lower() for k in [".spectral", "spectral.yaml", "vacuum", "buf.yaml", "buf.gen.yaml"])]
+        if lint_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=lint_files[0],
+                evidence_detail=f"Reglas de linting de especificaciones (Spectral/Buf) configuradas en '{lint_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró configuración de linter de contratos (Spectral / Vacuum / Buf).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_mock_servers(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for mock servers derived from specs (Prism, WireMock, Mockoon, MSW)."""
+        mock_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["prism", "wiremock", "mockoon", "msw", "mock_server", "mocks/"])]
+        if mock_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=mock_files[0],
+                evidence_detail=f"Servidores mock derivados de contratos identificados en '{mock_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectó configuración de servidores mock ni simulación de contratos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_contract_codegen(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for automated code generation from contracts (OpenAPI Generator, buf, protoc)."""
+        codegen_files = [f for f in ev.rel_files if any(k in f.lower() for k in ["openapi-generator", "buf.gen", "protoc", "datamodel-codegen", "codegen"])]
+        if codegen_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=codegen_files[0],
+                evidence_detail=f"Pipeline de generación de código (CodeGen) verificado en '{codegen_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Falta automatización de generación de código/tipos a partir de contratos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # -------------------------------------------------------------------------
+    # Fallback Generic Check
+    # -------------------------------------------------------------------------
+
     def _generic_check(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Fallback check for any custom criteria."""
         return AuditCriterion(
@@ -883,3 +1896,4 @@ class CriteriaEvaluator:
             evidence_detail="Evaluación pendiente por regla genérica no implementada.",
             remediation_hint=cfg.get("hint")
         )
+

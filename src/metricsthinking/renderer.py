@@ -34,7 +34,8 @@ class ReportRenderer:
         lines = [
             f"# INFERRED OPERATIONAL ROADMAP: {self.report.project_name.upper()}",
             "",
-            "> **Framework de Gobernanza:** MetricsThinking™ v1.0.0-ENTERPRISE (SDD / Stage-Gate)  ",
+            f"> **Framework de Gobernanza:** MetricsThinking™ v3.0 Universal ({self.report.domain_archetype.value.upper()} / Stage-Gate)  ",
+            f"> **Arquetipo de Dominio:** `{self.report.domain_archetype.value}` | **Modo:** `{self.report.inspection_mode.value}`  ",
             f"> **Estado Consolidado:** `{self.report.consolidated_score:.1f}% / 100.0%` — **{self.report.maturity_band.value}**  ",
             f"> **Cuello de Botella Activo:** `{self.report.active_bottleneck}`  ",
             f"> **Fecha de Emisión:** `{self.report.audit_date}`  ",
@@ -141,12 +142,14 @@ class ReportRenderer:
 
         return f"""# METRICSTHINKING™: Auditoría Forense y Madurez del Proyecto
 
-> **Motor Evaluador:** MetricsThinking™ v1.0.0-ENTERPRISE  
+> **Motor Evaluador:** MetricsThinking™ v3.0 Universal  
 > **Proyecto Auditado:** `{self.report.project_name}`  
 > **Ubicación:** `{self.report.project_path}`  
 > **Fecha de Auditoría:** `{self.report.audit_date}`  
 > **Auditor Responsable:** `{self.report.auditor}`  
-> **Perfil Aplicado:** `{self.report.profile_used}`  
+> **Perfil Aplicado:** `{self.report.profile_used}` (`{self.report.domain_archetype.value}`)  
+> **Modo de Inspección:** `{self.report.inspection_mode.value}`  
+> **ThinkingSeed:** {'`Detectado (v' + (self.report.seed_version or '3.0') + ')`' if self.report.seed_detected else '`No detectado`'}  
 > **Git Commit / Branch:** `{self.report.git_commit or 'N/A'}` / `{self.report.git_branch or 'N/A'}`  
 > **Score Consolidado:** **`{score:.1f}% / 100.0%`**  
 > **Banda de Madurez:** **{band}**"""
@@ -158,6 +161,13 @@ class ReportRenderer:
         total_criteria = sum(m.criteria_total for m in self.report.modules)
         passed_criteria = sum(m.criteria_passed for m in self.report.modules)
 
+        primitives_table = ""
+        if self.report.evidence_primitives:
+            primitives_table = "\n\n### Primitivas Universales de Evidencia\n\n| Primitiva | Archivos Clasificados | Rutas de Muestra |\n|:---|:---:|:---|\n"
+            for p_name, p_sum in self.report.evidence_primitives.items():
+                samples = ", ".join(f"`{s}`" for s in p_sum.sample_paths[:3]) if p_sum.sample_paths else "—"
+                primitives_table += f"| **{p_name.capitalize()}** | `{p_sum.file_count}` | {samples} |\n"
+
         return f"""---
 
 ## 1. RESUMEN EJECUTIVO Y GROUND TRUTH
@@ -165,11 +175,12 @@ class ReportRenderer:
 MetricsThinking™ ha completado la auditoría forense estricta basada en evidencias físicas verificables en el repositorio.
 
 - **Nota Global Consolidada ($Score_{{Total}}$):** **`{score:.2f}%`**
+- **Arquetipo de Dominio:** **`{self.report.domain_archetype.value}`** (Modo: `{self.report.inspection_mode.value}`)
 - **Criterios Cumplidos:** **`{passed_criteria} / {total_criteria}`** ({round((passed_criteria/total_criteria)*100, 1) if total_criteria else 0}%)
 - **Cuello de Botella Inmediato:** **`{bottleneck}`**
 - **Archivos Físicos Escaneados:** **`{self.report.stats.get('total_files_scanned', 0)}`**
-- **Memoria Técnica (Seed):** {'`Presente`' if self.report.stats.get('seeds_detected', 0) > 0 else '`No detectada`'}
-- **Gobernanza iDirectory (.context.yaml):** {'`Activa`' if self.report.stats.get('context_files_detected', 0) > 0 else '`No detectada`'}"""
+- **Memoria Técnica (Seed):** {'`Presente`' if self.report.seed_detected or self.report.stats.get('seeds_detected', 0) > 0 else '`No detectada`'}
+- **Gobernanza iDirectory (.context.yaml):** {'`Activa`' if self.report.stats.get('context_files_detected', 0) > 0 else '`No detectada`'}{primitives_table}"""
 
     def _render_dashboard_table(self) -> str:
         lines = [
@@ -194,7 +205,7 @@ MetricsThinking™ ha completado la auditoría forense estricta basada en eviden
             )
 
         lines.append(
-            f"| **TOTAL** | **Ciclo de Vida Completo (SDD)** | **100%** | "
+            f"| **TOTAL** | **Ciclo de Vida Completo ({self.report.domain_archetype.value.upper()})** | **100%** | "
             f"`{sum(m.criteria_passed for m in self.report.modules)} / {sum(m.criteria_total for m in self.report.modules)}` | "
             f"— | **`{self.report.consolidated_score:.2f}%`** | "
             f"**{self.report.maturity_band.name}** |"
@@ -326,3 +337,4 @@ MetricsThinking™ ha completado la auditoría forense estricta basada en eviden
 
 > *Reporte generado automáticamente por **MetricsThinking™ Universal Project Auditor**.*  
 > *Disciplina de auditoría: **Ground Truth First** (evidencia física sobre supuestos).*"""
+

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metricsthinking.io/schemas/thinking_seed_v3.schema.json",
+  "title": "ThinkingSeedV3Contract",
+  "description": "Validation contract for ThinkingSeed v3.0 polymorphic project DNA declarations.",
+  "type": "object",
+  "properties": {
+    "project_name": {
+      "type": "string"
+    },
+    "seed_version": {
+      "type": "string",
+      "enum": ["3.0", "3.0.0", "2.0", "1.0"]
+    },
+    "domain_archetype": {
+      "type": "string",
+      "enum": [
+        "software-engineering",
+        "mlops",
+        "llmops",
+        "dataops",
+        "gitops",
+        "platform-eng",
+        "devsecops",
+        "dual-track",
+        "team-topologies",
+        "chaos-eng",
+        "sdd",
+        "data-platform",
+        "web-app",
+        "custom"
+      ]
+    },
+    "inspection_mode": {
+      "type": "string",
+      "enum": [
+        "source_code",
+        "declarative_config",
+        "pipeline_orchestration",
+        "governance_spec",
+        "polyglot_hybrid"
+      ]
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "evidence_hints": {
+      "type": "object",
+      "properties": {
+        "source_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "test_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "spec_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "pipeline_patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "telemetry": {
+      "type": "object"
+    }
+  },
+  "required": ["project_name", "domain_archetype"],
+  "additionalProperties": true
+}

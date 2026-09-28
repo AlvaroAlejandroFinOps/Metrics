@@ -8,6 +8,39 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class DomainArchetype(str, Enum):
+    SOFTWARE_ENGINEERING = "software-engineering"
+    MLOPS = "mlops"
+    LLMOPS = "llmops"
+    DATAOPS = "dataops"
+    GITOPS = "gitops"
+    PLATFORM_ENG = "platform-eng"
+    DEVSECOPS = "devsecops"
+    DUAL_TRACK = "dual-track"
+    TEAM_TOPOLOGIES = "team-topologies"
+    CHAOS_ENG = "chaos-eng"
+    SDD = "sdd"
+    DATA_PLATFORM = "data-platform"
+    WEB_APP = "web-app"
+    CUSTOM = "custom"
+
+
+class InspectionMode(str, Enum):
+    SOURCE_CODE = "source_code"
+    DECLARATIVE_CONFIG = "declarative_config"
+    PIPELINE_ORCHESTRATION = "pipeline_orchestration"
+    GOVERNANCE_SPEC = "governance_spec"
+    POLYGLOT_HYBRID = "polyglot_hybrid"
+
+
+class EvidencePrimitiveSummary(BaseModel):
+    primitive_type: str = Field(..., description="Tipo canónico de evidencia universal (config, spec, pipeline, verification, implementation)")
+    file_count: int = Field(0, description="Cantidad de archivos clasificados")
+    total_lines: int = Field(0, description="Líneas de código/especificación acumuladas")
+    sample_paths: list[str] = Field(default_factory=list, description="Rutas de muestra")
+    verified_valid: bool = Field(True, description="Verificación sintáctica o de no-vacío")
+
+
 class ModuleStatus(str, Enum):
     DONE = "done"          # 100% cumplido (#2ECC71)
     ACTIVE = "active"      # 1% - 99% cumplido (#2196F3)
@@ -80,8 +113,13 @@ class ProjectAuditReport(BaseModel):
     audit_date: str
     auditor: str = "MetricsThinking™ Universal Auditor"
     profile_used: str = "default"
+    domain_archetype: DomainArchetype = DomainArchetype.SOFTWARE_ENGINEERING
+    inspection_mode: InspectionMode = InspectionMode.SOURCE_CODE
     git_commit: str | None = None
     git_branch: str | None = None
+    seed_detected: bool = False
+    seed_version: str | None = None
+    evidence_primitives: dict[str, EvidencePrimitiveSummary] = Field(default_factory=dict)
     modules: list[CanonicalModuleEvaluation]
     remediation_plan: list[RemediationItem] = Field(default_factory=list)
     stats: dict[str, Any] = Field(default_factory=dict)

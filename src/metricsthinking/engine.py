@@ -15,6 +15,7 @@ from .scorer import AuditScorer
 def run_audit(
     target_path: str = ".",
     profile_name: str = "default",
+    archetype: str | None = None,
     out_dir: str | None = None,
     prefix: str = "MetricsThinking",
     quiet: bool = False
@@ -38,27 +39,44 @@ def run_audit(
             profiles_dir = cand
             break
 
+    # If archetype is explicitly passed, use it as profile name
+    effective_profile = archetype if archetype else profile_name
+
     out_path = target / "artifacts" if not out_dir else Path(out_dir).resolve()
 
     if not quiet:
-        print("[*] Starting MetricsThinking™ Audit...")
-        print(f"    - Target:  {target}")
-        print(f"    - Profile: {profile_name}")
-        print(f"    - Output:  {out_path}")
-        print(f"    - Prefix:  {prefix}")
+        print("[*] Starting MetricsThinking™ Audit v3.0...")
+        print(f"    - Target:    {target}")
+        print(f"    - Profile:   {effective_profile}")
+        print(f"    - Output:    {out_path}")
+        print(f"    - Prefix:    {prefix}")
 
     # Phase 1: Collect
     collector = ProjectCollector(str(target))
     evidence = collector.collect()
     if not quiet:
-        print(f"    - Scanned: {evidence.total_files} files in repository")
+        print(f"    - Scanned:   {evidence.total_files} files in repository")
+
+    # Auto-detect archetype from seed if profile is default/auto and seed has explicit archetype
+    if (effective_profile in ["default", "auto"]) and evidence.detected_archetype:
+        detected = evidence.detected_archetype.lower()
+        # Verify if profile exists
+        if profiles_dir and (profiles_dir / f"{detected}.yaml").exists():
+            effective_profile = detected
+            if not quiet:
+                print(f"    - Auto-detected Profile from Seed: {effective_profile}")
 
     # Phase 2: Evaluate
-    evaluator = CriteriaEvaluator.load_profile(profile_name, profiles_dir)
+    evaluator = CriteriaEvaluator.load_profile(effective_profile, profiles_dir)
     modules = evaluator.evaluate(evidence)
 
     # Phase 3: Score
-    scorer = AuditScorer(modules, evidence, profile_name=profile_name)
+    scorer = AuditScorer(
+        modules,
+        evidence,
+        profile_name=effective_profile,
+        profile_data=evaluator.profile
+    )
     report = scorer.score()
 
     # Phase 4: Render & Write
@@ -66,23 +84,25 @@ def run_audit(
     artifacts = renderer.write_artifacts(out_path, filename_prefix=prefix)
 
     if not quiet:
-        print("\n" + "=" * 70)
+        print("\n" + "=" * 75)
         print(f"  METRICSTHINKING™ AUDIT RESULTS: {report.project_name.upper()}")
-        print("=" * 70)
+        print(f"  Archetype: {report.domain_archetype.value} | Mode: {report.inspection_mode.value}")
+        print("=" * 75)
         print(f"  Consolidated Score: {report.consolidated_score:.2f}% / 100.0%")
         print(f"  Maturity Band:      {report.maturity_band.value}")
         print(f"  Active Bottleneck:  {report.active_bottleneck}")
-        print("-" * 70)
-        print(f"  {'ID':<5} {'Módulo':<38} {'Peso':<8} {'% Fase':<10} {'Estado':<10}")
-        print("-" * 70)
+        print("-" * 75)
+        print(f"  {'ID':<5} {'Módulo':<40} {'Peso':<8} {'% Fase':<10} {'Estado':<10}")
+        print("-" * 75)
         for m in report.modules:
             pct_str = f"{m.phase_completion_pct:.1f}%"
             weight_str = f"{m.weight*100:.0f}%"
-            print(f"  {m.module_id:<5} {m.name[:36]:<38} {weight_str:<8} {pct_str:<10} {m.status.value:<10}")
-        print("=" * 70)
+            print(f"  {m.module_id:<5} {m.name[:38]:<40} {weight_str:<8} {pct_str:<10} {m.status.value:<10}")
+        print("=" * 75)
         print("[+] Artifacts written successfully:")
         print(f"    - Executive Report: {artifacts['markdown']}")
         print(f"    - Audit Telemetry:  {artifacts['json']}")
         print(f"    - Inferred Roadmap: {artifacts['roadmap']}")
 
     return report, artifacts
+

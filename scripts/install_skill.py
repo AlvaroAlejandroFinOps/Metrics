@@ -40,9 +40,11 @@ def install_antigravity(dest_root: Path, is_global: bool = False, dry_run: bool 
 
     if not dry_run:
         target_skill_dir.mkdir(parents=True, exist_ok=True)
+        target_file = target_skill_dir / "SKILL.md"
         if src_skill_md.exists():
-            shutil.copy2(src_skill_md, target_skill_dir / "SKILL.md")
-            created.append(target_skill_dir / "SKILL.md")
+            if src_skill_md.resolve() != target_file.resolve():
+                shutil.copy2(src_skill_md, target_file)
+            created.append(target_file)
 
         # Copy scripts if global install
         if is_global:

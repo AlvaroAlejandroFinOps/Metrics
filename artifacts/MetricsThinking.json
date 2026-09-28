@@ -1,41 +1,108 @@
 {
   "project_name": "MetricsThinking",
   "project_path": "D:\\0001 HyperScale Thinking\\PROYECTOS CLOUD\\Data & AI Strategy\\MetricsThinking",
-  "audit_date": "2026-09-20 02:19:07",
+  "audit_date": "2026-09-28 10:52:51",
   "auditor": "MetricsThinking™ Universal Auditor",
-  "profile_used": "default",
-  "git_commit": "6eb9b8f",
+  "profile_used": "sdd",
+  "domain_archetype": "sdd",
+  "inspection_mode": "governance_spec",
+  "git_commit": "7b5ba7e",
   "git_branch": "master",
+  "seed_detected": true,
+  "seed_version": null,
+  "evidence_primitives": {
+    "config": {
+      "primitive_type": "config",
+      "file_count": 34,
+      "total_lines": 0,
+      "sample_paths": [
+        "pyproject.toml",
+        ".github/workflows/ci.yml",
+        "01_seed/.context.yaml",
+        "02_foundation/engine/.context.yaml",
+        "03_research/experiments/.context.yaml"
+      ],
+      "verified_valid": true
+    },
+    "spec": {
+      "primitive_type": "spec",
+      "file_count": 8,
+      "total_lines": 0,
+      "sample_paths": [
+        "01_seed/seed-metricsthinking-master.md",
+        "docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md",
+        "docs/notes/CONTEXT_ENGINEERING_METRICSTHINKING_ALIGNMENT.md",
+        "schemas/audit_criterion.schema.json",
+        "schemas/canonical_module.schema.json"
+      ],
+      "verified_valid": true
+    },
+    "pipeline": {
+      "primitive_type": "pipeline",
+      "file_count": 1,
+      "total_lines": 0,
+      "sample_paths": [
+        ".github/workflows/ci.yml"
+      ],
+      "verified_valid": true
+    },
+    "verification": {
+      "primitive_type": "verification",
+      "file_count": 10,
+      "total_lines": 0,
+      "sample_paths": [
+        "03_research/experiments/.context.yaml",
+        "tests/test_calibration.py",
+        "tests/test_cli.py",
+        "tests/test_collector.py",
+        "tests/test_evaluator.py"
+      ],
+      "verified_valid": true
+    },
+    "implementation": {
+      "primitive_type": "implementation",
+      "file_count": 11,
+      "total_lines": 0,
+      "sample_paths": [
+        "03_research/prompts/.context.yaml",
+        "src/__init__.py",
+        "src/metricsthinking/cli.py",
+        "src/metricsthinking/collector.py",
+        "src/metricsthinking/engine.py"
+      ],
+      "verified_valid": true
+    }
+  },
   "modules": [
     {
       "module_id": "M01",
-      "name": "Descubrimiento y Alcance",
+      "name": "Definición del Dominio por Contratos y Especificación Formal",
       "weight": 0.05,
       "stage_group": "Fundamentos",
       "criteria": [
         {
           "criterion_id": "M01-C01",
-          "name": "Problem Statement Formalizado",
+          "name": "Spec-Driven Problem Statement & Domain Definition",
           "fulfilled": true,
           "evidence_path": "artifacts/plans/active/00_METRICSTHINKING_FRAMEWORK.md",
           "evidence_detail": "Problem statement y propósito estratégico formalizados en 'artifacts/plans/active/00_METRICSTHINKING_FRAMEWORK.md'.",
-          "remediation_hint": "Declarar formalmente el Problem Statement en 01_seed o README.md."
+          "remediation_hint": "Declarar el propósito del sistema guiado por especificaciones en 01_seed o README.md."
         },
         {
           "criterion_id": "M01-C02",
-          "name": "Límites y Scope Declarados",
+          "name": "Límites del Contrato y Ámbito de Especificación",
           "fulfilled": true,
           "evidence_path": "01_seed/seed-metricsthinking-master.md",
           "evidence_detail": "Límites de alcance y fronteras del sistema identificados en '01_seed/seed-metricsthinking-master.md'.",
-          "remediation_hint": "Definir secciones 'In Scope' y 'Out of Scope' explícitas."
+          "remediation_hint": "Definir límites de contratos e interfaces en README o seed."
         },
         {
           "criterion_id": "M01-C03",
-          "name": "Casos de Uso Formales",
+          "name": "Consumidores de la API y Casos de Uso de Contratos",
           "fulfilled": true,
           "evidence_path": "01_seed/seed-metricsthinking-master.md",
           "evidence_detail": "Perfiles de uso y casos definidos en '01_seed/seed-metricsthinking-master.md'.",
-          "remediation_hint": "Documentar casos de uso o perfiles de consumidores formales."
+          "remediation_hint": "Documentar consumidores previstos de las especificaciones en la memoria técnica."
         }
       ],
       "phase_completion_pct": 100.0,
@@ -44,41 +111,41 @@
     },
     {
       "module_id": "M02",
-      "name": "Arquitectura y Diseño Técnico",
+      "name": "Arquitectura de Contratos, OpenAPI, AsyncAPI y Protobuf",
       "weight": 0.1,
       "stage_group": "Fundamentos",
       "criteria": [
         {
           "criterion_id": "M02-C01",
-          "name": "AST / Modelos Canónicos Desacoplados",
+          "name": "Contratos de API Formales (OpenAPI / AsyncAPI / Proto / GraphQL)",
           "fulfilled": true,
-          "evidence_path": "src/metricsthinking/models.py",
-          "evidence_detail": "Modelos de dominio canónicos detectados en 1 archivos (e.g. 'src/metricsthinking/models.py').",
-          "remediation_hint": "Crear modelos de datos/AST neutrales en src/metricsthinking/models.py o similar."
+          "evidence_path": "docs/specs/.context.yaml",
+          "evidence_detail": "Especificaciones formales de contrato detectadas (1 archivos, e.g. 'docs/specs/.context.yaml').",
+          "remediation_hint": "Crear especificaciones OpenAPI, AsyncAPI o Protobuf en specs/, contracts/ o schemas/."
         },
         {
           "criterion_id": "M02-C02",
-          "name": "ADRs Documentados",
+          "name": "ADRs de Diseño de Contratos y Versionado de APIs",
           "fulfilled": true,
           "evidence_path": "docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md",
           "evidence_detail": "Decisiones arquitectónicas formales identificadas (2 archivos, e.g. 'docs/notes/ACADEMIC_SDD_PROJECT_EVALUATION_PAPERS.md').",
-          "remediation_hint": "Registrar ADRs formales en docs/notes o docs/architecture."
+          "remediation_hint": "Documentar ADRs sobre diseño de contratos y versionado en docs/."
         },
         {
           "criterion_id": "M02-C03",
-          "name": "Contratos JSON Schema Validados",
+          "name": "Esquemas de Datos y Validación Semántica",
           "fulfilled": true,
           "evidence_path": "schemas/audit_criterion.schema.json",
-          "evidence_detail": "Contratos formales de datos / esquemas presentes (3 esquemas, e.g. 'schemas/audit_criterion.schema.json').",
-          "remediation_hint": "Añadir esquemas JSON Schema o Pydantic validados en schemas/."
+          "evidence_detail": "Contratos formales de datos / esquemas presentes (5 esquemas, e.g. 'schemas/audit_criterion.schema.json').",
+          "remediation_hint": "Definir esquemas de datos reutilizables en schemas/."
         },
         {
           "criterion_id": "M02-C04",
-          "name": "Topología y Grafos Formales",
+          "name": "Grafo de Dependencias de Esquemas y Entidades",
           "fulfilled": true,
           "evidence_path": ".context/tree.json",
           "evidence_detail": "Mapa topológico satelital y grafo formal del proyecto activo en '.context/tree.json'.",
-          "remediation_hint": "Implementar análisis de dependencias/grafos en core o .context/tree.json."
+          "remediation_hint": "Modelar el grafo de dependencias de tipos en las especificaciones o .context/tree.json."
         }
       ],
       "phase_completion_pct": 100.0,
@@ -87,146 +154,146 @@
     },
     {
       "module_id": "M03",
-      "name": "Gobernanza y Cumplimiento",
+      "name": "Gobernanza de Especificaciones, Linting y Spectral",
       "weight": 0.05,
       "stage_group": "Fundamentos",
       "criteria": [
         {
           "criterion_id": "M03-C01",
-          "name": "Detección y Marcado de PII",
+          "name": "Anotaciones de Privacidad y PII en Esquemas",
           "fulfilled": true,
           "evidence_path": "01_seed/seed-metricsthinking-master.md",
           "evidence_detail": "Políticas de privacidad y clasificación PII documentadas en '01_seed/seed-metricsthinking-master.md'.",
-          "remediation_hint": "Integrar etiquetado o enmascarado de PII en los modelos de datos."
+          "remediation_hint": "Anotar atributos con campos de privacidad o PII en los esquemas de contrato."
         },
         {
           "criterion_id": "M03-C02",
-          "name": "Reglas de Calidad Formales (cQS)",
-          "fulfilled": true,
-          "evidence_path": "artifacts/plans/active/00_METRICSTHINKING_FRAMEWORK.md",
-          "evidence_detail": "Catálogo de criterios y reglas formales de calidad especificados en 'artifacts/plans/active/00_METRICSTHINKING_FRAMEWORK.md'.",
-          "remediation_hint": "Implementar reglas de calidad de datos o código cQS."
+          "name": "Linting de Especificaciones con Spectral / Vacuum / Buf",
+          "fulfilled": false,
+          "evidence_path": null,
+          "evidence_detail": "No se encontró configuración de linter de contratos (Spectral / Vacuum / Buf).",
+          "remediation_hint": "Configurar linter de especificaciones (Spectral, vacuum, buf lint) en el repositorio."
         },
         {
           "criterion_id": "M03-C03",
-          "name": "Validación Estricta de Esquemas / Context",
+          "name": "Validación Estricta de Sintaxis y Semántica de Contratos",
           "fulfilled": true,
           "evidence_path": ".context/tree.json",
-          "evidence_detail": "Gobernanza contextual iDirectory activa con 24 archivos de contexto (.context.yaml).",
-          "remediation_hint": "Asegurar validadores estrictos o gobernanza .context.yaml."
+          "evidence_detail": "Gobernanza contextual iDirectory activa con 20 archivos de contexto (.context.yaml).",
+          "remediation_hint": "Asegurar que todas las especificaciones pasen validación sintáctica estricta."
         }
       ],
-      "phase_completion_pct": 100.0,
-      "weighted_contribution_pct": 5.0,
-      "status": "done"
+      "phase_completion_pct": 66.67,
+      "weighted_contribution_pct": 3.33,
+      "status": "active"
     },
     {
       "module_id": "M04",
-      "name": "Aprovisionamiento y Readiness",
+      "name": "Entornos Reproducibles de CodeGen y Mocking",
       "weight": 0.05,
       "stage_group": "Fundamentos",
       "criteria": [
         {
           "criterion_id": "M04-C01",
-          "name": "Entorno Reproducible",
+          "name": "Configuración Reproducible de Herramientas de CodeGen",
           "fulfilled": true,
           "evidence_path": "pyproject.toml",
           "evidence_detail": "Manifiesto de empaquetado y entorno reproducible verificado en 'pyproject.toml'.",
-          "remediation_hint": "Definir pyproject.toml o package.json formal."
+          "remediation_hint": "Definir configuración de herramientas de code generation en configs/ o pyproject.toml."
         },
         {
           "criterion_id": "M04-C02",
-          "name": "Dependencias Versionadas",
+          "name": "Versionado Semántico de Especificaciones",
           "fulfilled": true,
           "evidence_path": "pyproject.toml",
           "evidence_detail": "Especificación estricta de versiones de dependencias verificada en 'pyproject.toml'.",
-          "remediation_hint": "Fijar versiones estrictas en el manifiesto de dependencias."
+          "remediation_hint": "Fijar versiones semánticas explícitas en las cabeceras de los contratos."
         },
         {
           "criterion_id": "M04-C03",
-          "name": "Fixture Enterprise Disponible",
-          "fulfilled": true,
-          "evidence_path": "data/processed/.context.yaml",
-          "evidence_detail": "Fixtures y datos de prueba disponibles (3 archivos, e.g. 'data/processed/.context.yaml').",
-          "remediation_hint": "Proveer fixtures o esquemas de prueba deterministas en tests/fixtures o data/."
+          "name": "Mock Servers y Fixtures de Respuestas Simuladas",
+          "fulfilled": false,
+          "evidence_path": null,
+          "evidence_detail": "No se detectó configuración de servidores mock ni simulación de contratos.",
+          "remediation_hint": "Configurar servidores mock o fixtures basados en las especificaciones en tests/ o tools/."
         }
       ],
-      "phase_completion_pct": 100.0,
-      "weighted_contribution_pct": 5.0,
-      "status": "done"
+      "phase_completion_pct": 66.67,
+      "weighted_contribution_pct": 3.33,
+      "status": "active"
     },
     {
       "module_id": "M05",
-      "name": "Construcción Núcleo (Core Engine)",
+      "name": "Motor de Generación de Código y Tipos Core (CodeGen)",
       "weight": 0.25,
       "stage_group": "Construcción",
       "criteria": [
         {
           "criterion_id": "M05-C01",
-          "name": "Parsers Funcionales",
-          "fulfilled": true,
-          "evidence_path": "src/metricsthinking/collector.py",
-          "evidence_detail": "Módulos de parseo e ingesta identificados en 'src/metricsthinking/collector.py'.",
-          "remediation_hint": "Implementar parsers para lectura de especificaciones de entrada."
+          "name": "Generador Automatizado de Modelos y Tipos",
+          "fulfilled": false,
+          "evidence_path": null,
+          "evidence_detail": "Falta automatización de generación de código/tipos a partir de contratos.",
+          "remediation_hint": "Configurar scripts o workflows de generación de código a partir de especificaciones."
         },
         {
           "criterion_id": "M05-C02",
-          "name": "Inferencia Operativa de Roles",
+          "name": "Generador de Stubs de Servidor y SDKs de Cliente",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/engine.py",
           "evidence_detail": "Motor nuclear de procesamiento y lógica operativa verificado en 'src/metricsthinking/engine.py'.",
-          "remediation_hint": "Desarrollar lógica central de inferencia o transformación."
+          "remediation_hint": "Implementar o generar stubs de servidor y clientes de API tipados."
         },
         {
           "criterion_id": "M05-C03",
-          "name": "Resolución de Relaciones y Ciclos",
+          "name": "Resolución de Referencias Cruzadas y Enlaces de Contratos",
           "fulfilled": true,
           "evidence_path": "src/__init__.py",
-          "evidence_detail": "Arquitectura modular interconectada (9 archivos fuente).",
-          "remediation_hint": "Asegurar algoritmos para resolver dependencias o relaciones."
+          "evidence_detail": "Arquitectura modular interconectada (10 archivos fuente).",
+          "remediation_hint": "Asegurar soporte completo para estructuras polimórficas en los generadores."
         },
         {
           "criterion_id": "M05-C04",
-          "name": "Generador Canónico de Métricas / Lógica",
+          "name": "Generador de Validadores y Serializadores de Tipos",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/cli.py",
           "evidence_detail": "Mecanismo de generación de métricas o cálculo cuantitativo detectado en 'src/metricsthinking/cli.py'.",
-          "remediation_hint": "Implementar generador de código o síntesis de medidas."
+          "remediation_hint": "Implementar validadores de runtime generados desde las especificaciones."
         }
       ],
-      "phase_completion_pct": 100.0,
-      "weighted_contribution_pct": 25.0,
-      "status": "done"
+      "phase_completion_pct": 75.0,
+      "weighted_contribution_pct": 18.75,
+      "status": "active"
     },
     {
       "module_id": "M06",
-      "name": "Integración e Interoperabilidad",
+      "name": "Publicación de Contratos, SDKs y Portales de APIs",
       "weight": 0.15,
       "stage_group": "Construcción",
       "criteria": [
         {
           "criterion_id": "M06-C01",
-          "name": "Emisores de Dialecto Nativo",
+          "name": "Emisores de Documentación Interactiva (Swagger/Redoc/Elements)",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/renderer.py",
           "evidence_detail": "Emisores y serializadores de destino verificados en 'src/metricsthinking/renderer.py'.",
-          "remediation_hint": "Crear emisores hacia tecnologías destino en src/core/emitter o similar."
+          "remediation_hint": "Configurar generación de documentación interactiva Swagger UI o Redoc."
         },
         {
           "criterion_id": "M06-C02",
-          "name": "Escritura Atómica y Safe-Encoding",
+          "name": "Generación Atómica e Inmutable de SDKs",
           "fulfilled": false,
           "evidence_path": null,
           "evidence_detail": "Falta estandarización de escritura atómica y safe-encoding UTF-8.",
-          "remediation_hint": "Usar atomic write y UTF-8 seguro para serializar artefactos."
+          "remediation_hint": "Garantizar builds atómicos y reproducibles de SDKs generados."
         },
         {
           "criterion_id": "M06-C03",
-          "name": "Exportación Multi-Formato",
+          "name": "Exportación Multi-Formato de Contratos",
           "fulfilled": true,
           "evidence_path": null,
-          "evidence_detail": "Soporte de representación multi-formato verificado en el repositorio (.json, .md, .py, .toml, .txt).",
-          "remediation_hint": "Ofrecer serialización a JSON, Markdown o diagramas."
+          "evidence_detail": "Soporte de representación multi-formato verificado en el repositorio (.json, .md, .mdc, .py, .toml).",
+          "remediation_hint": "Ofrecer exportación de especificaciones en múltiples formatos de intercambio."
         }
       ],
       "phase_completion_pct": 66.67,
@@ -235,33 +302,33 @@
     },
     {
       "module_id": "M07",
-      "name": "Aseguramiento de Calidad (QA & Stress)",
+      "name": "Validación de Contratos, Detección de Breaking Changes y QA",
       "weight": 0.1,
       "stage_group": "Certificación",
       "criteria": [
         {
           "criterion_id": "M07-C01",
-          "name": "Cobertura y Tasa de Éxito de Pruebas",
+          "name": "Pruebas de Conformidad con el Contrato (Contract Testing)",
           "fulfilled": true,
-          "evidence_path": "tests/test_cli.py",
-          "evidence_detail": "Suite de pruebas presente (6 archivos de prueba en tests/, e.g. 'tests/test_cli.py').",
-          "remediation_hint": "Desarrollar suite de tests en tests/."
+          "evidence_path": "tests/test_calibration.py",
+          "evidence_detail": "Suite de pruebas presente (9 archivos de prueba en tests/, e.g. 'tests/test_calibration.py').",
+          "remediation_hint": "Configurar suite de tests de conformidad de contratos (Schemathesis, Dredd) en tests/."
         },
         {
           "criterion_id": "M07-C02",
-          "name": "Golden Regression Tests Validados",
+          "name": "Detección Automática de Breaking Changes (Golden Contracts)",
           "fulfilled": true,
           "evidence_path": "tests/fixtures/sample_golden_audit.json",
           "evidence_detail": "Pruebas de regresión deterministas (Golden files/Snapshots) identificadas en 'tests/fixtures/sample_golden_audit.json'.",
-          "remediation_hint": "Añadir tests de regresión con archivos golden / snapshots esperados."
+          "remediation_hint": "Integrar chequeo de breaking changes contra el contrato maestro previo."
         },
         {
           "criterion_id": "M07-C03",
-          "name": "Suites de Estrés / Benchmark Masivo",
+          "name": "Pruebas de Estrés con Datos Sintéticos Derivados del Contrato",
           "fulfilled": false,
           "evidence_path": null,
           "evidence_detail": "No se detectaron suites de benchmarking ni pruebas de estrés por tiers.",
-          "remediation_hint": "Implementar benchmarks o stress tests en tests/ o scripts/."
+          "remediation_hint": "Configurar property-based testing o fuzzing guiado por esquemas."
         }
       ],
       "phase_completion_pct": 66.67,
@@ -270,33 +337,33 @@
     },
     {
       "module_id": "M08",
-      "name": "Validación y Aceptación Organizacional",
+      "name": "API Cockpit, Catálogo de Especificaciones y CLI",
       "weight": 0.1,
       "stage_group": "Certificación",
       "criteria": [
         {
           "criterion_id": "M08-C01",
-          "name": "Proyecciones por Rol (Persona Lenses)",
+          "name": "Lentes de Especificación para Product y Desarrolladores",
           "fulfilled": true,
           "evidence_path": "docs/PERSONA_LENSES.md",
           "evidence_detail": "Proyecciones especializadas por rol (Persona Lenses) presentes en 'docs/PERSONA_LENSES.md'.",
-          "remediation_hint": "Implementar proyecciones adaptadas a diferentes perfiles (lenses/personas)."
+          "remediation_hint": "Documentar perspectivas de diseño por perfil de stakeholder."
         },
         {
           "criterion_id": "M08-C02",
-          "name": "Leadership Cockpit / Tableros Ejecutivos",
+          "name": "Dashboard de Salud y Conformidad de APIs",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/renderer.py",
           "evidence_detail": "Cuadro de mando o generación de reportes ejecutivos verificado en 'src/metricsthinking/renderer.py'.",
-          "remediation_hint": "Proveer dashboard o cockpit de resumen ejecutivo."
+          "remediation_hint": "Configurar dashboard de observabilidad y catálogo de especificaciones."
         },
         {
           "criterion_id": "M08-C03",
-          "name": "CLI de Diagnóstico y Exploración",
+          "name": "CLI de Validación, Linting y CodeGen de Contratos",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/cli.py",
           "evidence_detail": "Interfaz CLI de exploración y diagnóstico verificada en 'src/metricsthinking/cli.py'.",
-          "remediation_hint": "Exponer comandos CLI de diagnóstico o auditoría."
+          "remediation_hint": "Proveer CLI para validación, linting y generación de código."
         }
       ],
       "phase_completion_pct": 100.0,
@@ -305,25 +372,25 @@
     },
     {
       "module_id": "M09",
-      "name": "Despliegue y Automatización (CI/CD)",
+      "name": "CI/CD con Contract Quality Gates y Publicación Automática",
       "weight": 0.1,
       "stage_group": "Certificación",
       "criteria": [
         {
           "criterion_id": "M09-C01",
-          "name": "Pipeline CI/CD Automatizado",
+          "name": "Pipeline de CI con Validación de Especificaciones",
           "fulfilled": true,
           "evidence_path": ".github/workflows/ci.yml",
           "evidence_detail": "Pipeline de integración continua automatizado verificado en '.github/workflows/ci.yml'.",
-          "remediation_hint": "Configurar workflow de CI en .github/workflows/ci.yml."
+          "remediation_hint": "Configurar pipeline de CI (.github/workflows) para validación estricta de contratos."
         },
         {
           "criterion_id": "M09-C02",
-          "name": "Empaquetado y Distribución Estandarizada",
+          "name": "Empaquetado y Publicación Automática de SDKs",
           "fulfilled": true,
           "evidence_path": "pyproject.toml",
           "evidence_detail": "Configuración de empaquetado estándar/entry points verificada en 'pyproject.toml'.",
-          "remediation_hint": "Configurar empaquetado buildable o .pre-commit-config.yaml."
+          "remediation_hint": "Configurar publicación automatizada de SDKs de cliente tras actualizar contratos."
         }
       ],
       "phase_completion_pct": 100.0,
@@ -332,33 +399,33 @@
     },
     {
       "module_id": "M10",
-      "name": "Cierre, Extensibilidad y Documentación",
+      "name": "Memoria Técnica de Contratos, Guías de Integración y Roadmap",
       "weight": 0.05,
       "stage_group": "Entrega",
       "criteria": [
         {
           "criterion_id": "M10-C01",
-          "name": "Documentación Técnica Exhaustiva (Seed)",
+          "name": "ThinkingSeed Spec-Driven Development & Contract Architecture",
           "fulfilled": true,
           "evidence_path": "01_seed/seed-metricsthinking-master.md",
           "evidence_detail": "Memoria técnica formal (ThinkingSeed) identificada en '01_seed/seed-metricsthinking-master.md'.",
-          "remediation_hint": "Generar ThinkingSeed Master completo en 01_seed/."
+          "remediation_hint": "Generar ThinkingSeed SDD formal en 01_seed/."
         },
         {
           "criterion_id": "M10-C02",
-          "name": "CLI Help Documentado",
+          "name": "Guía de Integración y Documentación de APIs",
           "fulfilled": true,
-          "evidence_path": "README_ES.md",
-          "evidence_detail": "Instrucciones operativas y ayuda de comandos documentadas en 'README_ES.md'.",
-          "remediation_hint": "Documentar comandos CLI y opciones en README o help."
+          "evidence_path": "01_seed/seed-metricsthinking-master.md",
+          "evidence_detail": "Instrucciones operativas y ayuda de comandos documentadas en '01_seed/seed-metricsthinking-master.md'.",
+          "remediation_hint": "Documentar guía de integración y uso de contratos en README o docs/."
         },
         {
           "criterion_id": "M10-C03",
-          "name": "Adaptadores Multicanal / Roadmap",
+          "name": "Roadmap de Evolución de Contratos y APIs",
           "fulfilled": true,
           "evidence_path": "01_seed/seed-metricsthinking-master.md",
           "evidence_detail": "Roadmap formal de extensibilidad y capacidades futuras documentado en '01_seed/seed-metricsthinking-master.md'.",
-          "remediation_hint": "Documentar roadmap y adaptadores futuros en el plan maestro."
+          "remediation_hint": "Documentar roadmap de evolución de especificaciones en el plan maestro."
         }
       ],
       "phase_completion_pct": 100.0,
@@ -369,36 +436,71 @@
   "remediation_plan": [
     {
       "priority": "P1",
+      "module_id": "M05",
+      "criterion_id": "M05-C01",
+      "action": "Configurar scripts o workflows de generación de código a partir de especificaciones.",
+      "impact_score": 6.25,
+      "files_to_touch": [
+        "specs/",
+        "src/"
+      ]
+    },
+    {
+      "priority": "P1",
+      "module_id": "M03",
+      "criterion_id": "M03-C02",
+      "action": "Configurar linter de especificaciones (Spectral, vacuum, buf lint) en el repositorio.",
+      "impact_score": 1.67,
+      "files_to_touch": [
+        ".context.yaml",
+        "schemas/"
+      ]
+    },
+    {
+      "priority": "P2",
       "module_id": "M06",
       "criterion_id": "M06-C02",
-      "action": "Usar atomic write y UTF-8 seguro para serializar artefactos.",
+      "action": "Garantizar builds atómicos y reproducibles de SDKs generados.",
       "impact_score": 5.0,
       "files_to_touch": [
-        "src/metricsthinking/renderer.py"
+        "src/"
       ]
     },
     {
       "priority": "P2",
       "module_id": "M07",
       "criterion_id": "M07-C03",
-      "action": "Implementar benchmarks o stress tests en tests/ o scripts/.",
+      "action": "Configurar property-based testing o fuzzing guiado por esquemas.",
       "impact_score": 3.33,
       "files_to_touch": [
         "tests/"
       ]
+    },
+    {
+      "priority": "P3",
+      "module_id": "M04",
+      "criterion_id": "M04-C03",
+      "action": "Configurar servidores mock o fixtures basados en las especificaciones en tests/ o tools/.",
+      "impact_score": 1.67,
+      "files_to_touch": [
+        "pyproject.toml",
+        "tests/fixtures/"
+      ]
     }
   ],
   "stats": {
-    "total_files_scanned": 70,
+    "total_files_scanned": 88,
     "seeds_detected": 1,
     "manifests_detected": 2,
-    "context_files_detected": 24,
-    "schemas_detected": 3,
-    "tests_detected": 6,
-    "source_files_detected": 9,
-    "is_git": true
+    "context_files_detected": 20,
+    "schemas_detected": 5,
+    "tests_detected": 9,
+    "source_files_detected": 10,
+    "is_git": true,
+    "domain_archetype": "sdd",
+    "inspection_mode": "governance_spec"
   },
-  "consolidated_score": 91.67,
-  "maturity_band": "Excelencia Operativa / Producción (90.0% - 100.0%)",
-  "active_bottleneck": "M06: Integración e Interoperabilidad (66.7% completado)"
+  "consolidated_score": 82.08,
+  "maturity_band": "Madurez Avanzada / Pre-producción (75.0% - 89.9%)",
+  "active_bottleneck": "M03: Gobernanza de Especificaciones, Linting y Spectral (66.7% completado)"
 }
