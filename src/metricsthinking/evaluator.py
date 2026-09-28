@@ -4,13 +4,27 @@ Evaluates collected physical evidence against a profile's criteria catalog.
 """
 
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from .collector import ProjectEvidence
-from .models import AuditCriterion, CanonicalModuleEvaluation
+# Ensure local directory is in sys.path for standalone script execution
+_PKG_DIR = Path(__file__).resolve().parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+try:
+    from metricsthinking.collector import ProjectEvidence
+    from metricsthinking.models import AuditCriterion, CanonicalModuleEvaluation
+except (ImportError, ValueError):
+    try:
+        from .collector import ProjectEvidence
+        from .models import AuditCriterion, CanonicalModuleEvaluation
+    except (ImportError, ValueError):
+        from collector import ProjectEvidence
+        from models import AuditCriterion, CanonicalModuleEvaluation
 
 
 class CriteriaEvaluator:

@@ -5,12 +5,24 @@ Performs comprehensive, strictly READ-ONLY inspection of the target repository.
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from metricsthinking.models import EvidencePrimitiveSummary
+# Ensure local directory is in sys.path for standalone script execution
+_PKG_DIR = Path(__file__).resolve().parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+try:
+    from metricsthinking.models import EvidencePrimitiveSummary
+except (ImportError, ValueError):
+    try:
+        from .models import EvidencePrimitiveSummary
+    except (ImportError, ValueError):
+        from models import EvidencePrimitiveSummary
 
 
 class ProjectEvidence:

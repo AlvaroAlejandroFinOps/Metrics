@@ -5,9 +5,21 @@ JSON telemetry exports, and operational 10-phase INFERRED_ROADMAP.md.
 """
 
 import json
+import sys
 from pathlib import Path
 
-from .models import ModuleStatus, ProjectAuditReport
+# Ensure local directory is in sys.path for standalone script execution
+_PKG_DIR = Path(__file__).resolve().parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+try:
+    from metricsthinking.models import ModuleStatus, ProjectAuditReport
+except (ImportError, ValueError):
+    try:
+        from .models import ModuleStatus, ProjectAuditReport
+    except (ImportError, ValueError):
+        from models import ModuleStatus, ProjectAuditReport
 
 
 class ReportRenderer:

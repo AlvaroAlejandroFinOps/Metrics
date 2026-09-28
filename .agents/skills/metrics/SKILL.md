@@ -21,6 +21,9 @@ Esta habilidad permite al agente actuar como **Lead Systems & AI Architect y Aud
 - Al solicitar auditar la madurez, avance real, deuda técnica o calidad de cualquier repositorio de software, datos, IA, plataformas o infraestructura.
 - Para diagnosticar el cuello de botella inmediato y derivar el roadmap de ejecución operacional desacoplado en 10 etapas adaptadas al arquetipo de ingeniería.
 
+> ⛔ **REGLA CRÍTICA DE INMUTABILIDAD (READ-ONLY GUARDRAIL)**:
+> **Bajo ninguna circunstancia debes modificar, editar o parchar los archivos o scripts de la skill** (`.agents/skills/metrics/` o `~/.gemini/config/skills/metrics/`). La skill es una herramienta externa inmutable de auditoría. Si un comando o importación falla en el entorno del usuario, reporta el diagnóstico directamente sin alterar los archivos de la skill. Toda la salida y materialización debe escribirse exclusivamente en el repositorio auditado (`<TARGET>/artifacts/`).
+
 ---
 
 ## 2. Los 10 Arquetipos de Ingeniería Soportados (v3.0)
@@ -88,17 +91,17 @@ Mapea la evidencia del repositorio a los 10 módulos canónicos (M01 a M10), ada
 - Tarjeta de resumen final destacando Score Global, Banda de Madurez y Cuello de Botella Activo (`M10 ==> SUMMARY`).
 
 ### FASE 5: Generación y Verificación de Artefactos
-Invoca el motor automatizado mediante el CLI de Python:
+Invoca el motor automatizado mediante el script canónico portable:
 
 ```bash
-# Auditoría con perfil específico
-metricsthinking audit --target "<RUTA_PROYECTO>" --profile <PERFIL> --out-dir "<RUTA_PROYECTO>/artifacts"
+# Ejecución universal y portable desde cualquier repositorio (recomendada):
+python "C:\Users\Alvaro\.gemini\config\skills\metrics\scripts\cli.py" audit --target "<RUTA_PROYECTO>" --profile <PERFIL>
 
-# O mediante Python module:
-python -m metricsthinking.cli audit --target "<RUTA_PROYECTO>" --profile <PERFIL>
+# Listar perfiles disponibles:
+python "C:\Users\Alvaro\.gemini\config\skills\metrics\scripts\cli.py" list-profiles
 
-# Listar todos los perfiles disponibles:
-python -m metricsthinking.cli list-profiles
+# O mediante CLI instalado:
+metricsthinking audit --target "<RUTA_PROYECTO>" --profile <PERFIL>
 ```
 
 ---

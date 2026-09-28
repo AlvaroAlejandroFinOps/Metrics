@@ -3,17 +3,44 @@ Scorer and Remediation Planner for MetricsThinking™.
 Computes canonical weighted scores, maturity bands, and prioritized technical remediation.
 """
 
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-from .collector import ProjectEvidence
-from .models import (
-    CanonicalModuleEvaluation,
-    DomainArchetype,
-    InspectionMode,
-    ProjectAuditReport,
-    RemediationItem,
-)
+# Ensure local directory is in sys.path for standalone script execution
+_PKG_DIR = Path(__file__).resolve().parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+try:
+    from metricsthinking.collector import ProjectEvidence
+    from metricsthinking.models import (
+        CanonicalModuleEvaluation,
+        DomainArchetype,
+        InspectionMode,
+        ProjectAuditReport,
+        RemediationItem,
+    )
+except (ImportError, ValueError):
+    try:
+        from .collector import ProjectEvidence
+        from .models import (
+            CanonicalModuleEvaluation,
+            DomainArchetype,
+            InspectionMode,
+            ProjectAuditReport,
+            RemediationItem,
+        )
+    except (ImportError, ValueError):
+        from collector import ProjectEvidence
+        from models import (
+            CanonicalModuleEvaluation,
+            DomainArchetype,
+            InspectionMode,
+            ProjectAuditReport,
+            RemediationItem,
+        )
 
 
 class AuditScorer:

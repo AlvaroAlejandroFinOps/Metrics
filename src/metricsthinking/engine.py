@@ -3,13 +3,33 @@ MetricsThinking™ Engine & Orchestrator.
 Universal Project Auditor executing Ground Truth forensic inspection.
 """
 
+import sys
 from pathlib import Path
 
-from .collector import ProjectCollector
-from .evaluator import CriteriaEvaluator
-from .models import ProjectAuditReport
-from .renderer import ReportRenderer
-from .scorer import AuditScorer
+# Ensure local directory is in sys.path for standalone script execution
+_PKG_DIR = Path(__file__).resolve().parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+try:
+    from metricsthinking.collector import ProjectCollector
+    from metricsthinking.evaluator import CriteriaEvaluator
+    from metricsthinking.models import ProjectAuditReport
+    from metricsthinking.renderer import ReportRenderer
+    from metricsthinking.scorer import AuditScorer
+except (ImportError, ValueError):
+    try:
+        from .collector import ProjectCollector
+        from .evaluator import CriteriaEvaluator
+        from .models import ProjectAuditReport
+        from .renderer import ReportRenderer
+        from .scorer import AuditScorer
+    except (ImportError, ValueError):
+        from collector import ProjectCollector
+        from evaluator import CriteriaEvaluator
+        from models import ProjectAuditReport
+        from renderer import ReportRenderer
+        from scorer import AuditScorer
 
 
 def run_audit(

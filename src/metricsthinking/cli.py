@@ -9,7 +9,18 @@ from pathlib import Path
 
 import yaml
 
-from .engine import run_audit
+# Ensure local directory is in sys.path for standalone script execution
+_PKG_DIR = Path(__file__).resolve().parent
+if str(_PKG_DIR) not in sys.path:
+    sys.path.insert(0, str(_PKG_DIR))
+
+try:
+    from metricsthinking.engine import run_audit
+except (ImportError, ValueError):
+    try:
+        from .engine import run_audit
+    except (ImportError, ValueError):
+        from engine import run_audit
 
 
 def list_available_profiles() -> None:
