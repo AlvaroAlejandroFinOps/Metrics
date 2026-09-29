@@ -2,9 +2,9 @@
 
 > **Framework de Gobernanza:** MetricsThinking™ v3.0 Universal (SDD / Stage-Gate)  
 > **Arquetipo de Dominio:** `sdd` | **Modo:** `governance_spec`  
-> **Estado Consolidado:** `82.1% / 100.0%` — **Madurez Avanzada / Pre-producción (75.0% - 89.9%)**  
+> **Estado Consolidado:** `87.1% / 100.0%` — **Madurez Avanzada / Pre-producción (75.0% - 89.9%)**  
 > **Cuello de Botella Activo:** `M03: Gobernanza de Especificaciones, Linting y Spectral (66.7% completado)`  
-> **Fecha de Emisión:** `2026-09-28 12:32:28`  
+> **Fecha de Emisión:** `2026-09-28 22:20:40`  
 
 Este documento representa el **Roadmap Operacional y de Ejecución Técnica** derivado por ingeniería inversa a partir de la evidencia física (Ground Truth) del repositorio. Sirve como guía de trabajo para el equipo de arquitectura y desarrollo.
 
@@ -81,16 +81,15 @@ Este documento representa el **Roadmap Operacional y de Ejecución Técnica** de
 ---
 
 ## M06: Publicación de Contratos, SDKs y Portales de APIs
-**Avance:** `66.7%` | **Peso en Ciclo:** `15%` | **Estado:** 🔵 EN CONSTRUCCIÓN
+**Avance:** `100.0%` | **Peso en Ciclo:** `15%` | **Estado:** 🟢 COMPLETADO
 
 ### Checklists de Implementación
 - [x] **Emisores de Documentación Interactiva (Swagger/Redoc/Elements)** (`M06-C01`): Emisores y serializadores de destino verificados en 'src/metricsthinking/renderer.py'. *(Evidencia: `src/metricsthinking/renderer.py`)*
-- [ ] **Generación Atómica e Inmutable de SDKs** (`M06-C02`): Garantizar builds atómicos y reproducibles de SDKs generados.
+- [x] **Generación Atómica e Inmutable de SDKs** (`M06-C02`): Manejo seguro de codificación UTF-8 / serialización protegida en 'src/metricsthinking/cli.py'. *(Evidencia: `src/metricsthinking/cli.py`)*
 - [x] **Exportación Multi-Formato de Contratos** (`M06-C03`): Soporte de representación multi-formato verificado en el repositorio (.json, .md, .mdc, .py, .toml).
 
 ### Entregables Tangibles Esperados
-- 🎯 Cierre de brechas pendientes: Generación Atómica e Inmutable de SDKs.
-- 📁 Materialización de especificaciones formales, código nuclear, contratos de validación o pruebas automatizadas asociadas.
+- ✅ Todos los artefactos y contratos físicos de **M06** han sido verificados satisfactoriamente en disco.
 
 ---
 

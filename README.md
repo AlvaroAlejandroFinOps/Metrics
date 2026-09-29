@@ -116,7 +116,8 @@ MetricsThinking/
 │   ├── MetricsThinking.md                    # Executive human-readable audit report
 │   └── plans/active/
 │       └── INFERRED_ROADMAP.md               # Reverse-engineered execution roadmap
-├── config/profiles/                          # 10 Universal Archetype Evaluation Profiles
+├── config/profiles/                          # 14 Universal Archetype Evaluation Profiles
+│   ├── agent-skill.yaml                      # AI Agent Skills & Context Engineering profile
 │   ├── default.yaml                          # Software engineering canonical profile
 │   ├── mlops.yaml                            # MLOps & Machine Learning lifecycle
 │   ├── llmops.yaml                           # LLMOps, GenAI, Context Engineering

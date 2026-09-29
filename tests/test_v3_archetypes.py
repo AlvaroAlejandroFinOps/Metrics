@@ -28,7 +28,8 @@ ALL_PROFILES = [
     "chaos-eng",
     "sdd",
     "data-platform",
-    "web-app"
+    "web-app",
+    "agent-skill"
 ]
 
 
@@ -137,3 +138,40 @@ def test_universal_evidence_primitives(tmp_path):
     assert evidence.evidence_primitives["verification"].file_count >= 1
     assert "implementation" in evidence.evidence_primitives
     assert evidence.evidence_primitives["implementation"].file_count >= 1
+
+
+def test_agent_skill_auto_detection(tmp_path):
+    """Verifies that an AI Skill project is auto-detected as agent-skill archetype."""
+    # Create skill structure
+    skills_dir = tmp_path / ".agents" / "skills" / "my_skill"
+    skills_dir.mkdir(parents=True)
+    (skills_dir / "SKILL.md").write_text(
+        "---\nname: my_skill\ndescription: Test AI skill\n---\n# My Skill\nProblem Statement: Skill for testing.\nScope: All tests.\n",
+        encoding="utf-8"
+    )
+    (tmp_path / "AGENTS.md").write_text("# Universal Agent Instructions", encoding="utf-8")
+    (tmp_path / "GEMINI.md").write_text("# Gemini Rules", encoding="utf-8")
+
+    collector = ProjectCollector(str(tmp_path))
+    evidence = collector.collect()
+
+    assert evidence.detected_archetype == "agent-skill"
+    assert evidence.detected_mode == "governance_spec"
+    assert len(evidence.skills) >= 1
+    assert len(evidence.agent_instructions) >= 2
+
+
+def test_profile_alias_resolution():
+    """Verifies that natural language hints and aliases resolve to canonical profile names."""
+    from metricsthinking.engine import resolve_profile_name
+
+    assert resolve_profile_name("agent-skill") == "agent-skill"
+    assert resolve_profile_name("skill") == "agent-skill"
+    assert resolve_profile_name("ai-skill") == "agent-skill"
+    assert resolve_profile_name("context-engineering") == "agent-skill"
+    assert resolve_profile_name("evalua este proyecto como una skill para IA") == "agent-skill"
+    assert resolve_profile_name("como data platform") == "data-platform"
+    assert resolve_profile_name("web-app") == "web-app"
+    assert resolve_profile_name("frontend UI") == "web-app"
+    assert resolve_profile_name("llmops") == "llmops"
+

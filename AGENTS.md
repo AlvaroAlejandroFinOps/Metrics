@@ -20,6 +20,7 @@ When interacting with this codebase or auditing other repositories:
 metricsthinking audit --target .
 
 # Run audit with specialized domain profile
+metricsthinking audit --target . --profile agent-skill
 metricsthinking audit --target . --profile data-platform
 metricsthinking audit --target . --profile web-app
 

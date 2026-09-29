@@ -22,6 +22,7 @@ class DomainArchetype(str, Enum):
     SDD = "sdd"
     DATA_PLATFORM = "data-platform"
     WEB_APP = "web-app"
+    AGENT_SKILL = "agent-skill"
     CUSTOM = "custom"
 
 

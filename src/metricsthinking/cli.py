@@ -67,8 +67,9 @@ def main():
     # 1. audit subcommand
     audit_parser = subparsers.add_parser("audit", help="Run forensic audit on a repository")
     audit_parser.add_argument("--target", "-t", default=".", help="Path to project repository to audit")
-    audit_parser.add_argument("--profile", "-p", default="default", help="Profile name (e.g. default, mlops, llmops, dataops, gitops, platform-eng, devsecops, dual-track, team-topologies, chaos-eng, sdd)")
-    audit_parser.add_argument("--archetype", "-a", default=None, help="Engineering archetype override")
+    audit_parser.add_argument("--profile", "-p", default="default", help="Profile name (e.g. default, agent-skill, data-platform, web-app, mlops, llmops, dataops, gitops, platform-eng, devsecops, dual-track, team-topologies, chaos-eng, sdd)")
+    audit_parser.add_argument("--archetype", "-a", default=None, help="Engineering archetype override (e.g. agent-skill, data-platform, etc.)")
+    audit_parser.add_argument("--hint", default=None, help="Natural language hint or context for evaluation (e.g. 'evalua como una skill para IA')")
     audit_parser.add_argument("--out-dir", "-o", default=None, help="Output directory for generated artifacts")
     audit_parser.add_argument("--prefix", default="MetricsThinking", help="Filename prefix for generated artifacts")
     audit_parser.add_argument("--quiet", "-q", action="store_true", help="Suppress console summary table")
@@ -145,9 +146,10 @@ def main():
 
         else:
             # Default to audit
+            selected_profile = getattr(args, "hint", None) or args.profile
             run_audit(
                 target_path=args.target,
-                profile_name=args.profile,
+                profile_name=selected_profile,
                 archetype=getattr(args, "archetype", None),
                 out_dir=args.out_dir,
                 prefix=args.prefix,

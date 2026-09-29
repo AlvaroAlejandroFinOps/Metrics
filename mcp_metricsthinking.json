@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "metricsthinking": {
+      "command": "python",
+      "args": [
+        "-m",
+        "metricsthinking.mcp_server"
+      ]
+    }
+  }
+}

@@ -2,11 +2,12 @@
 name: metrics
 description: >-
   Auditor universal de proyectos tecnológicos basado en evidencia física estricta (Ground Truth) y la
-  metodología de 10 módulos canónicos adaptados al dominio (MetricsThinking™ v3.0). Soporta 10 arquetipos
-  de ingeniería (MLOps, LLMOps, DataOps, GitOps, Platform Engineering, DevSecOps, Dual-Track Agile,
-  Team Topologies, Chaos Engineering y SDD). Evalúa objetivamente el grado de madurez matemática (0-100%),
-  genera el roadmap visual en Mermaid LR y materializa tres artefactos sincronizados (MetricsThinking.json,
-  MetricsThinking.md e INFERRED_ROADMAP.md). Se activa con /metrics.
+  metodología de 10 módulos canónicos adaptados al dominio (MetricsThinking™ v3.0). Soporta 11+ arquetipos
+  de ingeniería (AI Agent Skills / Context Engineering, Data Platform, Web App, MLOps, LLMOps, DataOps,
+  GitOps, Platform Engineering, DevSecOps, Dual-Track Agile, Team Topologies, Chaos Engineering y SDD).
+  Evalúa objetivamente el grado de madurez matemática (0-100%), genera el roadmap visual en Mermaid LR y
+  materializa tres artefactos sincronizados (MetricsThinking.json, MetricsThinking.md e INFERRED_ROADMAP.md).
+  Se activa con /metrics.
 ---
 
 # MetricsThinking™: Auditor Forense Universal de Proyectos e Ingeniería Inversa (/metrics)
@@ -17,20 +18,42 @@ Esta habilidad permite al agente actuar como **Lead Systems & AI Architect y Aud
 
 ## 1. Misión y Cuándo Activar
 
-- Al invocar `/metrics` o `/metrics <ruta-del-proyecto>`.
-- Al solicitar auditar la madurez, avance real, deuda técnica o calidad de cualquier repositorio de software, datos, IA, plataformas o infraestructura.
+- Al invocar `/metrics`, `/metrics <ruta-del-proyecto>` o expresiones naturales como `/metrics (evalua este proyecto como una skill para IA)`.
+- Al solicitar auditar la madurez, avance real, deuda técnica o calidad de cualquier repositorio de software, datos, IA, plataformas, skills de agentes o infraestructura.
 - Para diagnosticar el cuello de botella inmediato y derivar el roadmap de ejecución operacional desacoplado en 10 etapas adaptadas al arquetipo de ingeniería.
+
+### Protocolo de Entrada y Aceptación de Contexto (Natural Language Hints)
+
+El usuario puede invocar `/metrics` de diversas formas:
+1. **Invocación Simple / Auto-detección**: `/metrics` (audita el directorio activo detectando automáticamente el arquetipo a partir de la evidencia física y el seed).
+2. **Invocación con Ruta**: `/metrics "D:\...\MiProyecto"` (audita una ruta específica con auto-detección).
+3. **Invocación con Contexto o Pista en Lenguaje Natural**:
+   - `/metrics (evalua este proyecto como una skill para IA)`
+   - `/metrics evalua como data-platform`
+   - `/metrics para un proyecto de web-app`
+4. **Invocación Explícita por CLI**: `metricsthinking audit --target "." --profile agent-skill`
+
+> 💡 **Acuse de Recibo Inicial**: Al comenzar la respuesta de auditoría, emite un breve bloque introductorio confirmando el proyecto analizado y el perfil resuelto:
+> ```markdown
+> > 🔍 **MetricsThinking™ v3.0 | Auditoría Forense**
+> > - **Proyecto Auditado:** `<NOMBRE_PROYECTO>` (`<RUTA>`)
+> > - **Perfil / Arquetipo:** `<PERFIL>` (*<DESCRIPCIÓN_CORTA>*)
+> > - **Modo de Inspección:** `<INSPECTION_MODE>`
+> ```
 
 > ⛔ **REGLA CRÍTICA DE INMUTABILIDAD (READ-ONLY GUARDRAIL)**:
 > **Bajo ninguna circunstancia debes modificar, editar o parchar los archivos o scripts de la skill** (`.agents/skills/metrics/` o `~/.gemini/config/skills/metrics/`). La skill es una herramienta externa inmutable de auditoría. Si un comando o importación falla en el entorno del usuario, reporta el diagnóstico directamente sin alterar los archivos de la skill. Toda la salida y materialización debe escribirse exclusivamente en el repositorio auditado (`<TARGET>/artifacts/`).
 
 ---
 
-## 2. Los 10 Arquetipos de Ingeniería Soportados (v3.0)
+## 2. Los Arquetipos de Ingeniería Soportados (v3.0)
 
 | Arquetipo | Perfil YAML | Modo de Inspección | Foco Principal |
 |:---|:---|:---|:---|
-| **Software Engineering** | `default` | `source_code` | AST, modelos canónicos, suites de tests, empaquetado |
+| **AI Agent Skill / Context Eng** | `agent-skill` | `governance_spec` | `SKILL.md`, frontmatter YAML, plantillas maestras, multi-agent rules, installers |
+| **Data Platform & Lakehouse** | `data-platform` | `pipeline_orchestration` | Medallion (Bronze/Silver/Gold), Kimball, Delta/Iceberg/BigQuery, dbt, SLAs |
+| **Web Application & Frontend** | `web-app` | `source_code` | Componentes UI, state management, API client, routing, testing visual/E2E |
+| **Software Engineering** | `default` | `source_code` | AST, modelos canónicos, suites de tests unitarios/integración, empaquetado |
 | **MLOps** | `mlops` | `pipeline_orchestration` | Model registries, data drift, pipelines de entrenamiento, model cards |
 | **LLMOps / GenAIOps** | `llmops` | `pipeline_orchestration` | Context engineering, prompt registry, eval suites, guardrails |
 | **DataOps / MDS** | `dataops` | `pipeline_orchestration` | Data contracts, linaje dbt, reconciliación, SLAs de datos |
@@ -109,8 +132,10 @@ metricsthinking audit --target "<RUTA_PROYECTO>" --profile <PERFIL>
 ## 5. Confirmación de Resultados
 
 Al concluir la auditoría, presenta al usuario:
-1. **Nota Global Consolidada ($Score_{Total}$)**, **Arquetipo** y **Banda de Madurez**.
-2. **Cuello de Botella Inmediato**: Primer módulo secuencial incompleto.
-3. **Dashboard de los 10 Módulos** adaptados al dominio.
-4. **Rutas directas con markdown links** a los 3 artefactos generados.
+1. **Acuse inicial y metadatos de evaluación**: Proyecto, perfil resuelto y modo de inspección.
+2. **Nota Global Consolidada ($Score_{Total}$)**, **Arquetipo** y **Banda de Madurez**.
+3. **Cuello de Botella Inmediato**: Primer módulo secuencial incompleto.
+4. **Dashboard de los 10 Módulos** adaptados al dominio.
+5. **Rutas directas con markdown links** a los 3 artefactos generados.
+
 

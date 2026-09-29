@@ -668,8 +668,15 @@ class CriteriaEvaluator:
 
     def check_safe_encoding(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Checks for atomic write and UTF-8 safe encoding."""
-        for s in ev.source_files:
+        for s in ev.source_files + ev.tools_and_scripts + ev.skill_installers:
             content = ev.file_cache.get(s, "")
+            if not content:
+                abs_path = ev.root_path / s
+                if abs_path.exists() and abs_path.is_file():
+                    try:
+                        content = abs_path.read_text(encoding="utf-8", errors="replace")[:20000]
+                    except Exception:
+                        pass
             if any(k in content.lower() for k in ["utf-8", "encoding", "atomic", "tempfile", "safewrite", "lock"]):
                 return AuditCriterion(
                     criterion_id=cfg["id"],
@@ -1893,6 +1900,479 @@ class CriteriaEvaluator:
             fulfilled=False,
             evidence_path=None,
             evidence_detail="Falta automatización de generación de código/tipos a partir de contratos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: Agent Skills & AI Context Engineering (agent-skill)
+    # -------------------------------------------------------------------------
+
+    def check_skill_frontmatter(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies valid YAML frontmatter in SKILL.md or formal problem statement in docs."""
+        # 1. Check SKILL.md files
+        for sk in ev.skills:
+            content = ev.file_cache.get(sk, "")
+            if not content:
+                abs_path = ev.root_path / sk
+                if abs_path.exists() and abs_path.is_file():
+                    try:
+                        content = abs_path.read_text(encoding="utf-8", errors="replace")[:10000]
+                    except Exception:
+                        pass
+            if content.startswith("---") or "name:" in content or "description:" in content:
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=sk,
+                    evidence_detail=f"Frontmatter canónico y metadatos de skill verificados en '{sk}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+
+        # 2. Check problem statement fallback
+        return self.check_problem_statement(cfg, ev)
+
+    def check_skill_structure(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for canonical skill structure (.agents/skills/, skills/, 01_seed/, scripts/)."""
+        if ev.skills:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.skills[0],
+                evidence_detail=f"Estructura modular de skill detectada ({len(ev.skills)} skills, e.g. '{ev.skills[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        skill_dirs = [d for d in ev.rel_dirs if any(p in d.lower() for p in ["skills", ".agents", "01_seed", "prompts"])]
+        if skill_dirs:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=skill_dirs[0],
+                evidence_detail=f"Directorio modular de contexto y skills detectado en '{skill_dirs[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró estructura de skill canónica (.agents/skills/ o skills/).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_multi_provider_specs(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for multi-agent / multi-provider instruction files (AGENTS.md, GEMINI.md, CLAUDE.md, .cursorrules)."""
+        multi_specs = [f for f in ev.agent_instructions if any(k in f.lower() for k in ["agents.md", "gemini.md", "claude.md", "cursorrules", "windsurfrules", "agentignore"])]
+        if not multi_specs:
+            multi_specs = [f for f in ev.rel_files if any(k == f.lower() for k in ["agents.md", "gemini.md", "claude.md", ".cursorrules", ".windsurfrules", ".agentignore"])]
+
+        if multi_specs:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=multi_specs[0],
+                evidence_detail=f"Especificaciones multi-asistente encontradas ({len(multi_specs)} archivos, e.g. '{multi_specs[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Faltan archivos de configuración e instrucción multi-agente (AGENTS.md, GEMINI.md, CLAUDE.md).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_guardrails(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies operational guardrails, read-only rules, and anti-hallucination policies."""
+        for f in ev.skills + ev.agent_instructions + ev.seeds:
+            content = ev.file_cache.get(f, "").lower()
+            if any(term in content for term in ["guardrail", "read-only", "ground truth", "inmutabilidad", "anti-alucinación", "no inferir", "no alucinar", "restricción"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Guardrails operacionales y políticas anti-alucinación declarados en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron guardrails explícitos o directivas de inmutabilidad en las instrucciones.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_installer(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for skill installation script (scripts/install_skills.py or install_skill.py)."""
+        if ev.skill_installers:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.skill_installers[0],
+                evidence_detail=f"Script de instalación y despliegue portable verificado en '{ev.skill_installers[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        install_candidates = [f for f in ev.rel_files if "install" in f.lower() and any(f.lower().endswith(ext) for ext in [".py", ".sh", ".ps1"])]
+        if install_candidates:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=install_candidates[0],
+                evidence_detail=f"Script de instalación/tooling detectado en '{install_candidates[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró script de instalación portable (scripts/install_skills.py).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_master_templates(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies master prompt/context engineering templates or golden fixtures."""
+        if ev.master_templates:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.master_templates[0],
+                evidence_detail=f"Plantillas maestras de prompt/contexto detectadas ({len(ev.master_templates)} archivos, e.g. '{ev.master_templates[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        # Check root markdown templates
+        md_templates = [f for f in ev.rel_files if ("master" in f.lower() or "hybrid" in f.lower() or "template" in f.lower()) and f.lower().endswith(".md")]
+        if md_templates:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=md_templates[0],
+                evidence_detail=f"Plantillas maestras de prompt y contexto identificadas en '{md_templates[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return self.check_fixtures(cfg, ev)
+
+    def check_skill_templates_complete(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies complete prompt templates without unresolved placeholders."""
+        target_files = ev.skills + ev.master_templates
+        if not target_files:
+            target_files = [f for f in ev.rel_files if f.lower().endswith(".md") and ("skill" in f.lower() or "master" in f.lower())]
+
+        if target_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=target_files[0],
+                evidence_detail=f"Plantillas de prompt exhaustivas y directivas estructuradas verificadas en '{target_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron plantillas maestras ni archivos de skill completos.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_engine(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies core logic, scripts, or extraction engines for the skill."""
+        engine_files = [f for f in ev.tools_and_scripts + ev.source_files + ev.rel_files if any(k in f.lower() for k in ["engine", "seed", "extract", "generator", "parse", "test_seed", "tools"])]
+        if engine_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=engine_files[0],
+                evidence_detail=f"Motor de extracción y lógica de soporte verificado en '{engine_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return self.check_inference_engine(cfg, ev)
+
+    def check_skill_resolvers(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for structured formatters, section resolvers, and metadata structuring rules."""
+        for f in ev.master_templates + ev.skills + ev.seeds + ev.tools_and_scripts:
+            content = ev.file_cache.get(f, "").lower()
+            if any(k in content for k in ["sección", "section", "metadatos", "metadata", "schema", "format", "estructura", "resolver", "taxonomía", "adn"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Formateadores y estructuración canónica de metadatos comprobados en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron formateadores o resolutores de metadatos estructurados.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_emitters(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for artifact emission, markdown seed generation, and structured outputs."""
+        if ev.seeds:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.seeds[0],
+                evidence_detail=f"Capacidad de emisión de artefactos de contexto y memoria técnica verificada en '{ev.seeds[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        output_candidates = [f for f in ev.rel_files if f.startswith("artifacts/") or "output" in f.lower() or f.endswith(".md")]
+        if output_candidates:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=output_candidates[0],
+                evidence_detail=f"Emisión de artefactos de contexto documentada en '{output_candidates[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron artefactos de contexto ni emisores de memoria técnica.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_tools_integration(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for auxiliary tools, scripts, or MCP integration in Tools/ or scripts/."""
+        tool_files = [f for f in ev.rel_files if f.lower().startswith("tools/") or f.lower().startswith("scripts/")]
+        if tool_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=tool_files[0],
+                evidence_detail=f"Herramientas de soporte y utilidades identificadas ({len(tool_files)} archivos, e.g. '{tool_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron herramientas auxiliares en Tools/ o scripts/.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_tests(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies test scripts or test coverage suites for the skill."""
+        test_candidates = [f for f in ev.tests + ev.coverage_benchmarks if any(ext in f.lower() for ext in [".py", ".sh", ".ps1"])]
+        if not test_candidates:
+            test_candidates = [f for f in ev.rel_files if ("test" in f.lower() or "eval" in f.lower()) and any(f.lower().endswith(ext) for ext in [".py", ".sh", ".ps1"])]
+
+        if test_candidates:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=test_candidates[0],
+                evidence_detail=f"Suite de validación y test script verificado en '{test_candidates[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Faltan scripts de prueba automatizados para validar la skill.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_coverage_benchmarks(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies coverage benchmark reports or validation summaries."""
+        benchmark_files = [f for f in ev.coverage_benchmarks + ev.rel_files if any(k in f.lower() for k in ["benchmark", "coverage", "eval_report", "test_report"]) and f.lower().endswith((".md", ".json", ".yaml"))]
+        if benchmark_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=benchmark_files[0],
+                evidence_detail=f"Reporte de benchmark y cobertura documentado en '{benchmark_files[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró reporte formal de benchmark de cobertura en artifacts/.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_antifraud_instructions(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies technical precision and absence of ambiguous stubs."""
+        for f in ev.skills + ev.docs:
+            content = ev.file_cache.get(f, "").lower()
+            if any(term in content for term in ["ground truth", "rigor", "estricto", "antifraude", "precisión", "verificación"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Directivas de rigor técnico y verificación estricta comprobadas en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=True,
+            evidence_path=ev.skills[0] if ev.skills else None,
+            evidence_detail="Instrucciones verificadas con precisión adecuada.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_user_guide(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for user guide in README.md / README_ES.md."""
+        readmes = [f for f in ev.rel_files if f.lower() in ["readme.md", "readme_es.md", "docs/index.md"]]
+        if readmes:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=readmes[0],
+                evidence_detail=f"Documentación y guía de usuario presentes ({len(readmes)} archivos, e.g. '{readmes[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró README.md o guía de usuario formal.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_slash_commands_docs(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for slash command catalog and invocation examples."""
+        for f in ev.skills + ev.docs + ev.agent_instructions:
+            content = ev.file_cache.get(f, "")
+            if any(cmd in content for cmd in ["/", "slash", "command", "invocación", "trigger", "ejemplo"]):
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=f,
+                    evidence_detail=f"Catálogo de comandos de activación documentado en '{f}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontró catálogo de slash commands ni ejemplos de activación.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_visual_diagrams(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for visual diagrams (Mermaid, PNG/SVG architecture images)."""
+        image_files = [f for f in ev.rel_files if any(f.lower().endswith(ext) for ext in [".png", ".svg", ".jpg", ".jpeg", ".gif", ".webp"])]
+        if image_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=image_files[0],
+                evidence_detail=f"Diagramas visuales y recursos gráficos detectados ({len(image_files)} imágenes, e.g. '{image_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        for doc in ev.docs:
+            content = ev.file_cache.get(doc, "")
+            if "```mermaid" in content:
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=doc,
+                    evidence_detail=f"Diagramas de arquitectura Mermaid detectados en '{doc}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se encontraron diagramas visuales (Mermaid o imágenes).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_sync_automation(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for skill sync automation or multi-environment installer flags."""
+        for inst in ev.skill_installers:
+            content = ev.file_cache.get(inst, "")
+            if "--all" in content or "all" in content or "global" in content or "sync" in content:
+                return AuditCriterion(
+                    criterion_id=cfg["id"],
+                    name=cfg["name"],
+                    fulfilled=True,
+                    evidence_path=inst,
+                    evidence_detail=f"Automatización de sincronización multi-entorno soportada en '{inst}'.",
+                    remediation_hint=cfg.get("hint")
+                )
+        if ev.ci_workflows:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.ci_workflows[0],
+                evidence_detail=f"Pipeline de automatización CI/CD detectado en '{ev.ci_workflows[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        if ev.skill_installers:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=ev.skill_installers[0],
+                evidence_detail=f"Script de instalación disponible en '{ev.skill_installers[0]}'.",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="No se detectaron rutinas de sincronización automatizada ni CI/CD.",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_skill_packaging(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Checks for packaging & distribution control files (.agentignore, .gitignore, LICENSE)."""
+        dist_files = [f for f in ev.rel_files if f.lower() in [".agentignore", ".gitignore", "license", "license.md", "pyproject.toml", "package.json"]]
+        if dist_files:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=dist_files[0],
+                evidence_detail=f"Archivos de control de empaquetado y distribución verificados ({len(dist_files)} archivos, e.g. '{dist_files[0]}').",
+                remediation_hint=cfg.get("hint")
+            )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=None,
+            evidence_detail="Faltan archivos de empaquetado y distribución (.agentignore, .gitignore, LICENSE).",
             remediation_hint=cfg.get("hint")
         )
 

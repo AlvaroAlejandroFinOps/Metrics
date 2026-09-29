@@ -32,6 +32,118 @@ except (ImportError, ValueError):
         from scorer import AuditScorer
 
 
+PROFILE_ALIASES: dict[str, str] = {
+    # Agent skills & AI Context Engineering
+    "agent-skill": "agent-skill",
+    "agent_skill": "agent-skill",
+    "agentskill": "agent-skill",
+    "skill": "agent-skill",
+    "skills": "agent-skill",
+    "ai-skill": "agent-skill",
+    "ai_skill": "agent-skill",
+    "context-skill": "agent-skill",
+    "context-engineering": "agent-skill",
+    "context_engineering": "agent-skill",
+    "prompt-engineering": "agent-skill",
+    "prompt_engineering": "agent-skill",
+    "agent": "agent-skill",
+    "agents": "agent-skill",
+    # Data platform & DataOps
+    "data-platform": "data-platform",
+    "data_platform": "data-platform",
+    "data": "data-platform",
+    "lakehouse": "data-platform",
+    "medallion": "data-platform",
+    "dataops": "dataops",
+    # Web app
+    "web-app": "web-app",
+    "web_app": "web-app",
+    "webapp": "web-app",
+    "web": "web-app",
+    "frontend": "web-app",
+    # LLMOps & GenAI
+    "llmops": "llmops",
+    "llm": "llmops",
+    "genai": "llmops",
+    "rag": "llmops",
+    # MLOps
+    "mlops": "mlops",
+    "ml": "mlops",
+    # GitOps
+    "gitops": "gitops",
+    "k8s": "gitops",
+    "kubernetes": "gitops",
+    # Platform engineering
+    "platform-eng": "platform-eng",
+    "platform": "platform-eng",
+    "platform_eng": "platform-eng",
+    # DevSecOps
+    "devsecops": "devsecops",
+    "security": "devsecops",
+    "sec": "devsecops",
+    # Chaos engineering
+    "chaos-eng": "chaos-eng",
+    "chaos": "chaos-eng",
+    # SDD / Spec-driven
+    "sdd": "sdd",
+    "api": "sdd",
+    "spec": "sdd",
+    "spec-driven": "sdd",
+    # Dual-track & Team topologies
+    "dual-track": "dual-track",
+    "agile": "dual-track",
+    "team-topologies": "team-topologies",
+    "team": "team-topologies",
+    # Default
+    "software-engineering": "default",
+    "software": "default",
+    "default": "default",
+    "auto": "auto"
+}
+
+
+def resolve_profile_name(hint_or_name: str | None) -> str:
+    """Resolves profile names, aliases, or natural language prompts into canonical profile name."""
+    if not hint_or_name:
+        return "default"
+
+    clean = hint_or_name.strip().lower()
+
+    # Direct match in aliases
+    if clean in PROFILE_ALIASES:
+        return PROFILE_ALIASES[clean]
+
+    # Natural language pattern matching (e.g. "evalua este proyecto como una skill para IA")
+    if any(k in clean for k in ["skill", "habilidad", "agente", "agent", "prompt", "context engineering", "thinkingseed"]):
+        return "agent-skill"
+    if any(k in clean for k in ["lakehouse", "data platform", "plataforma de datos", "dbt", "bigquery", "medallion"]):
+        return "data-platform"
+    if any(k in clean for k in ["dataops", "calidad de datos", "contratos de datos"]):
+        return "dataops"
+    if any(k in clean for k in ["web app", "web", "frontend", "react", "nextjs", "vite", "ui"]):
+        return "web-app"
+    if any(k in clean for k in ["llmops", "genai", "rag", "langchain", "llamaindex", "guardrails"]):
+        return "llmops"
+    if any(k in clean for k in ["mlops", "machine learning", "modelo ml", "model registry"]):
+        return "mlops"
+    if any(k in clean for k in ["gitops", "kubernetes", "k8s", "helm", "argo"]):
+        return "gitops"
+    if any(k in clean for k in ["platform eng", "plataforma", "backstage", "developer portal", "iac"]):
+        return "platform-eng"
+    if any(k in clean for k in ["devsecops", "seguridad", "security", "sast", "sbom"]):
+        return "devsecops"
+    if any(k in clean for k in ["chaos eng", "caos", "resiliencia", "fault injection"]):
+        return "chaos-eng"
+    if any(k in clean for k in ["sdd", "spec-driven", "openapi", "swagger", "api first"]):
+        return "sdd"
+    if any(k in clean for k in ["dual-track", "discovery", "hipotesis"]):
+        return "dual-track"
+    if any(k in clean for k in ["team topologies", "topologias de equipo"]):
+        return "team-topologies"
+
+    return clean
+
+
 def run_audit(
     target_path: str = ".",
     profile_name: str = "default",
@@ -59,8 +171,9 @@ def run_audit(
             profiles_dir = cand
             break
 
-    # If archetype is explicitly passed, use it as profile name
-    effective_profile = archetype if archetype else profile_name
+    # If archetype is explicitly passed, use it as profile name, resolving aliases and natural language hints
+    raw_profile = archetype if archetype else profile_name
+    effective_profile = resolve_profile_name(raw_profile)
 
     out_path = target / "artifacts" if not out_dir else Path(out_dir).resolve()
 
@@ -77,14 +190,14 @@ def run_audit(
     if not quiet:
         print(f"    - Scanned:   {evidence.total_files} files in repository")
 
-    # Auto-detect archetype from seed if profile is default/auto and seed has explicit archetype
+    # Auto-detect archetype from seed/evidence if profile is default/auto
     if (effective_profile in ["default", "auto"]) and evidence.detected_archetype:
-        detected = evidence.detected_archetype.lower()
+        detected = resolve_profile_name(evidence.detected_archetype)
         # Verify if profile exists
         if profiles_dir and (profiles_dir / f"{detected}.yaml").exists():
             effective_profile = detected
             if not quiet:
-                print(f"    - Auto-detected Profile from Seed: {effective_profile}")
+                print(f"    - Auto-detected Profile from Repository/Seed: {effective_profile}")
 
     # Phase 2: Evaluate
     evaluator = CriteriaEvaluator.load_profile(effective_profile, profiles_dir)

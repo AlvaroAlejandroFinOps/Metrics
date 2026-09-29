@@ -56,6 +56,11 @@ class ProjectEvidence:
         self.adrs: list[str] = []
         self.dashboards: list[str] = []
         self.tools_and_scripts: list[str] = []
+        self.skills: list[str] = []
+        self.agent_instructions: list[str] = []
+        self.master_templates: list[str] = []
+        self.skill_installers: list[str] = []
+        self.coverage_benchmarks: list[str] = []
 
         # v3.0 Universal Evidence Primitives
         self.evidence_primitives: dict[str, EvidencePrimitiveSummary] = {}
@@ -207,6 +212,26 @@ class ProjectCollector:
             if ("tools/" in lower or "scripts/" in lower) and any(lower.endswith(ext) for ext in [".py", ".sh", ".ps1", ".bash", ".ts", ".js"]) and not lower.endswith(".context.yaml"):
                 self.evidence.tools_and_scripts.append(rel)
 
+            # Skills & Agent Customizations
+            if (lower.endswith("skill.md") or "/skills/" in lower or lower.startswith(".agents/skills/") or lower.startswith("skills/")) and not lower.startswith("tests/"):
+                self.evidence.skills.append(rel)
+
+            # Agent Instructions & Multi-assistant configs
+            if lower in ["agents.md", "gemini.md", "claude.md", ".cursorrules", ".windsurfrules", ".agentignore"] or "prompts/" in lower or "agent_rules" in lower:
+                self.evidence.agent_instructions.append(rel)
+
+            # Master Prompt/Seed Templates
+            if ("master" in lower or "hybrid" in lower or "prompt" in lower or "template" in lower) and any(lower.endswith(ext) for ext in [".md", ".txt", ".yaml", ".yml", ".json"]) and not lower.startswith("tests/") and "metrics" not in lower:
+                self.evidence.master_templates.append(rel)
+
+            # Skill Installers
+            if "install_skill" in lower and any(lower.endswith(ext) for ext in [".py", ".sh", ".ps1"]):
+                self.evidence.skill_installers.append(rel)
+
+            # Coverage & Benchmarks
+            if ("coverage" in lower or "benchmark" in lower or "eval" in lower) and any(lower.endswith(ext) for ext in [".py", ".md", ".json", ".yaml"]) and not lower.endswith(".context.yaml"):
+                self.evidence.coverage_benchmarks.append(rel)
+
             # Source files
             is_source = False
             if (lower.startswith("src/") or lower.startswith("app/") or lower.startswith("lib/") or lower.startswith("pkg/")) and any(lower.endswith(ext) for ext in [".py", ".ts", ".js", ".rs", ".go", ".sql", ".tf", ".rego"]) and not lower.endswith(".context.yaml"):
@@ -227,6 +252,12 @@ class ProjectCollector:
         files_to_read.extend(list(self.evidence.manifests.keys()))
         # Read CI workflows
         files_to_read.extend(self.evidence.ci_workflows)
+        # Read skills & agent instructions
+        files_to_read.extend(self.evidence.skills)
+        files_to_read.extend(self.evidence.agent_instructions)
+        files_to_read.extend(self.evidence.master_templates)
+        files_to_read.extend(self.evidence.skill_installers)
+        files_to_read.extend(self.evidence.coverage_benchmarks)
         # Read docs and active plans
         for rel in self.evidence.docs:
             if "active" in rel.lower() or "foundation" in rel.lower() or rel.lower() in ["readme.md", "readme_es.md", "agents.md"]:
@@ -245,7 +276,7 @@ class ProjectCollector:
                     pass
 
     def _parse_seed_metadata(self):
-        """Parses ThinkingSeed metadata if present in repo."""
+        """Parses ThinkingSeed metadata if present in repo, or applies automatic archetype detection."""
         for seed_rel in self.evidence.seeds:
             content = self.evidence.file_cache.get(seed_rel, "")
             if not content:
@@ -258,20 +289,55 @@ class ProjectCollector:
 
             if content:
                 self.evidence.seed_detected = True
-                # Check for YAML frontmatter
-                if content.startswith("---"):
-                    parts = content.split("---", 2)
-                    if len(parts) >= 3:
+                # Check for YAML frontmatter with ---
+                if "---" in content:
+                    parts = content.split("---")
+                    for p in parts[1:]:
                         try:
-                            data = yaml.safe_load(parts[1])
-                            if isinstance(data, dict):
+                            data = yaml.safe_load(p)
+                            if isinstance(data, dict) and any(k in data for k in ["project_name", "domain_archetype", "archetype", "project_type", "seed_version", "seed_schema_version"]):
                                 self.evidence.seed_data = data
-                                self.evidence.detected_archetype = data.get("domain_archetype") or data.get("archetype")
+                                self.evidence.detected_archetype = data.get("domain_archetype") or data.get("archetype") or data.get("project_type")
                                 self.evidence.detected_mode = data.get("inspection_mode")
-                                self.evidence.seed_version = str(data.get("seed_version", "3.0"))
+                                self.evidence.seed_version = str(data.get("seed_version", data.get("seed_schema_version", "3.0")))
+                                break
+                        except Exception:
+                            pass
+                # Also check for ```yaml code block in seed if frontmatter wasn't matched
+                if not self.evidence.detected_archetype and "```yaml" in content:
+                    code_blocks = content.split("```yaml")
+                    for block in code_blocks[1:]:
+                        code_content = block.split("```")[0]
+                        try:
+                            data = yaml.safe_load(code_content)
+                            if isinstance(data, dict) and any(k in data for k in ["project_name", "domain_archetype", "archetype", "project_type", "seed_version", "seed_schema_version"]):
+                                self.evidence.seed_data = data
+                                self.evidence.detected_archetype = data.get("domain_archetype") or data.get("archetype") or data.get("project_type")
+                                self.evidence.detected_mode = data.get("inspection_mode")
+                                self.evidence.seed_version = str(data.get("seed_version", data.get("seed_schema_version", "3.0")))
+                                break
                         except Exception:
                             pass
                 break
+
+        # Heuristic Auto-Detection if archetype is missing, generic, or modular-framework
+        curr_arch = (self.evidence.detected_archetype or "").lower()
+        if not curr_arch or curr_arch in ["modular-framework", "generic", "software", "unknown"]:
+            # 1. AI Agent Skill / Context Engineering:
+            if (len(self.evidence.skills) > 0 or
+                ("AGENTS.md" in [f.name for f in self.evidence.files] and len(self.evidence.agent_instructions) > 0) or
+                len(self.evidence.skill_installers) > 0 or
+                any("skill" in s.lower() for s in self.evidence.seeds)):
+                self.evidence.detected_archetype = "agent-skill"
+                self.evidence.detected_mode = "governance_spec"
+            # 2. Data Platform:
+            elif any(f.endswith("dbt_project.yml") or "dags/" in f or "airflow" in f for f in self.evidence.rel_files):
+                self.evidence.detected_archetype = "data-platform"
+                self.evidence.detected_mode = "pipeline_orchestration"
+            # 3. Web App:
+            elif ("package.json" in self.evidence.rel_files and any(f.endswith((".tsx", ".jsx", ".vue", ".svelte")) for f in self.evidence.rel_files)):
+                self.evidence.detected_archetype = "web-app"
+                self.evidence.detected_mode = "source_code"
 
     def _classify_universal_primitives(self):
         """Builds universal evidence primitives for polymorphic evaluation."""
@@ -287,23 +353,23 @@ class ProjectCollector:
             lower = rel.lower()
 
             # Config
-            if any(lower.endswith(ext) for ext in [".yaml", ".yml", ".toml", ".ini", ".env", ".tfvars"]) or "config/" in lower or lower in ["dockerfile", "docker-compose.yml", "kustomization.yaml"]:
+            if any(lower.endswith(ext) for ext in [".yaml", ".yml", ".toml", ".ini", ".env", ".tfvars"]) or "config/" in lower or lower in ["dockerfile", "docker-compose.yml", "kustomization.yaml", ".cursorrules", ".windsurfrules", ".agentignore"]:
                 primitives["config"].append(rel)
 
             # Spec
-            if lower.endswith(".schema.json") or lower.endswith(".proto") or lower.endswith(".graphql") or "openapi" in lower or "swagger" in lower or lower.startswith("specs/") or lower.startswith("contracts/") or rel in self.evidence.adrs or rel in self.evidence.seeds:
+            if lower.endswith(".schema.json") or lower.endswith(".proto") or lower.endswith(".graphql") or "openapi" in lower or "swagger" in lower or lower.startswith("specs/") or lower.startswith("contracts/") or rel in self.evidence.adrs or rel in self.evidence.seeds or rel in self.evidence.skills or rel in self.evidence.agent_instructions:
                 primitives["spec"].append(rel)
 
             # Pipeline
-            if ".github/workflows" in lower or "pipelines/" in lower or "dags/" in lower or "flows/" in lower or lower.startswith(".gitlab") or "jenkins" in lower or "argo/" in lower:
+            if ".github/workflows" in lower or "pipelines/" in lower or "dags/" in lower or "flows/" in lower or lower.startswith(".gitlab") or "jenkins" in lower or "argo/" in lower or rel in self.evidence.skill_installers:
                 primitives["pipeline"].append(rel)
 
             # Verification
-            if rel in self.evidence.tests or "evals/" in lower or "benchmarks/" in lower or "experiments/" in lower or "chaos/" in lower or "policies/" in lower or "rego/" in lower:
+            if rel in self.evidence.tests or rel in self.evidence.coverage_benchmarks or "evals/" in lower or "benchmarks/" in lower or "experiments/" in lower or "chaos/" in lower or "policies/" in lower or "rego/" in lower:
                 primitives["verification"].append(rel)
 
             # Implementation
-            if rel in self.evidence.source_files or "models/" in lower or "dbt/" in lower or "prompts/" in lower or "modules/" in lower or "charts/" in lower:
+            if rel in self.evidence.source_files or rel in self.evidence.skills or rel in self.evidence.master_templates or "models/" in lower or "dbt/" in lower or "prompts/" in lower or "modules/" in lower or "charts/" in lower or "foundation/" in lower:
                 primitives["implementation"].append(rel)
 
         for p_type, p_files in primitives.items():

@@ -1,0 +1,36 @@
+---
+description: MetricsThinking™ Forensic Project Auditor and Technical Maturity Evaluator
+globs: ["**/*"]
+alwaysApply: false
+---
+
+# MetricsThinking™ Cursor Rule
+
+Use this rule whenever the user asks for a project audit, code quality review, architecture maturity assessment, technical debt evaluation, or mentions `/metrics`.
+
+## Protocol
+
+1. **Verify Evidence (Ground Truth First)**:
+   - Inspect files physically (`src/`, `tests/`, `README.md`, `pyproject.toml`, `package.json`).
+   - Flag any unfinished stubs or unfulfilled architectural promises.
+
+2. **Execute Audit via CLI**:
+   Run the terminal command:
+   ```bash
+   metricsthinking audit --target .
+   ```
+   Or via Python module:
+   ```bash
+   python -m metricsthinking.cli audit --target .
+   ```
+
+3. **Check Outputs**:
+   - `artifacts/MetricsThinking.md`
+   - `artifacts/MetricsThinking.json`
+   - `artifacts/plans/active/INFERRED_ROADMAP.md`
+
+4. **Present Results**:
+   - Consolidated score ($0.0 - 100.0\%$).
+   - Maturity band (Critical Risk, Active Construction, Advanced Maturity, Operational Excellence).
+   - Immediate bottleneck (first sequential incomplete module).
+   - Horizontal Mermaid LR roadmap diagram.

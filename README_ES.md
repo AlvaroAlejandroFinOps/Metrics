@@ -116,7 +116,8 @@ MetricsThinking/
 │   ├── MetricsThinking.md                    # Reporte ejecutivo human-readable
 │   └── plans/active/
 │       └── INFERRED_ROADMAP.md               # Roadmap inferido de implementación
-├── config/profiles/                          # 10 Perfiles Universales de Evaluación
+├── config/profiles/                          # 14 Perfiles Universales de Evaluación
+│   ├── agent-skill.yaml                      # Perfil AI Agent Skills y Context Engineering
 │   ├── default.yaml                          # Perfil canónico de ingeniería de software
 │   ├── mlops.yaml                            # Perfil de ciclo de vida MLOps
 │   ├── llmops.yaml                           # Perfil LLMOps, GenAI y Context Engineering
