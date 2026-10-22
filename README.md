@@ -1,4 +1,4 @@
-# METRICSTHINKING: Universal Technology Project Reverse Engineering & Ground Truth Audit Engine
+![alt text](MetricsThinking.jpg)# METRICSTHINKING: Universal Technology Project Reverse Engineering & Ground Truth Audit Engine
 
 **Language:** [English](README.md) | [Español](README_ES.md)
 

@@ -1,3 +1,4 @@
+![alt text](MetricsThinking.jpg)
 # METRICSTHINKING: Motor Universal de Ingeniería Inversa y Auditoría por Ground Truth para Proyectos Tecnológicos 
 
 **Idioma:** [English](README.md) | [Español](README_ES.md)
