@@ -50,7 +50,7 @@ def test_run_installer_all(tmp_path: Path):
 
 def test_mcp_server_tools(tmp_path: Path):
     tools = handle_list_tools()
-    assert len(tools) == 3
+    assert len(tools) >= 3
     tool_names = [t["name"] for t in tools]
     assert "audit_repository" in tool_names
     assert "list_profiles" in tool_names

@@ -10,3 +10,7 @@ logs/
 data/raw/
 data/processed/
 data/sandbox/
+
+.context/cache/
+target/
+.pytest_cache/

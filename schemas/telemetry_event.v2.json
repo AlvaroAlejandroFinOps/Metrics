@@ -1,0 +1,225 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TelemetryEventV2",
+  "description": "End-to-end telemetry event schema for FPIA Economy v2.0 capturing repository context, 9-level token demand, multi-signal attribution, inference performance, and governance status.",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUID for the telemetry event"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": ["2.0.0"],
+      "description": "Version of the event schema contract"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp of the event"
+    },
+    "repo_id": {
+      "type": "string",
+      "description": "Repository identifier or name"
+    },
+    "commit_sha": {
+      "type": "string",
+      "description": "Git commit SHA or revision identifier"
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch name"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Canonical task identifier"
+    },
+    "execution_id": {
+      "type": "string",
+      "description": "Unique run execution identifier"
+    },
+    "experiment_id": {
+      "type": "string",
+      "description": "Identifier for controlled experimentation/ablation group"
+    },
+    "model_info": {
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string" },
+        "model_name": { "type": "string" },
+        "version": { "type": "string" },
+        "temperature": { "type": "number" },
+        "params": { "type": "object" }
+      },
+      "required": ["provider", "model_name"]
+    },
+    "retrieval_policy": {
+      "type": "string",
+      "description": "Name or key of the context retrieval policy applied"
+    },
+    "token_budget": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum token budget allocated for this execution"
+    },
+    "tokens_by_phase": {
+      "type": "object",
+      "description": "Granular 9-level token demand accounting",
+      "properties": {
+        "stored_tokens": { "type": "integer", "minimum": 0 },
+        "scanned_tokens": { "type": "integer", "minimum": 0 },
+        "indexed_tokens": { "type": "integer", "minimum": 0 },
+        "candidate_tokens": { "type": "integer", "minimum": 0 },
+        "retrieved_tokens": { "type": "integer", "minimum": 0 },
+        "injected_tokens": { "type": "integer", "minimum": 0 },
+        "processed_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "avoided_cache_tokens": { "type": "integer", "minimum": 0 }
+      },
+      "required": [
+        "stored_tokens",
+        "scanned_tokens",
+        "indexed_tokens",
+        "candidate_tokens",
+        "retrieved_tokens",
+        "injected_tokens",
+        "processed_tokens",
+        "output_tokens",
+        "avoided_cache_tokens"
+      ]
+    },
+    "candidate_chunks_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "injected_chunks": {
+      "type": "array",
+      "description": "Metadata of injected chunks (no raw content to prevent PII leakage)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chunk_id": { "type": "string" },
+          "position": { "type": "integer", "minimum": 0 },
+          "tokens": { "type": "integer", "minimum": 0 },
+          "power_type": { "type": "string", "enum": ["ACTIVE", "REACTIVE", "DISTORTION"] },
+          "relevance_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "content_hash": { "type": "string" }
+        },
+        "required": ["chunk_id", "position", "tokens", "power_type", "content_hash"]
+      }
+    },
+    "tools_invoked": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "cache_metrics": {
+      "type": "object",
+      "properties": {
+        "cache_hits": { "type": "integer", "minimum": 0 },
+        "cache_misses": { "type": "integer", "minimum": 0 },
+        "cache_hit_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "response_meta": {
+      "type": "object",
+      "properties": {
+        "response_tokens": { "type": "integer", "minimum": 0 },
+        "response_hash": { "type": "string" },
+        "latency_ms": { "type": "number", "minimum": 0 }
+      },
+      "required": ["response_tokens", "response_hash"]
+    },
+    "validations_executed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "details": { "type": "string" }
+        },
+        "required": ["name", "passed"]
+      }
+    },
+    "task_result": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["SUCCESS", "FAILURE", "PARTIAL"] },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["status", "score"]
+    },
+    "latencies_ms": {
+      "type": "object",
+      "properties": {
+        "retrieval_ms": { "type": "number", "minimum": 0 },
+        "injection_ms": { "type": "number", "minimum": 0 },
+        "inference_ms": { "type": "number", "minimum": 0 },
+        "validation_ms": { "type": "number", "minimum": 0 },
+        "total_ms": { "type": "number", "minimum": 0 }
+      },
+      "required": ["total_ms"]
+    },
+    "cost_usd": {
+      "type": "object",
+      "properties": {
+        "input_cost": { "type": "number", "minimum": 0 },
+        "output_cost": { "type": "number", "minimum": 0 },
+        "total_cost": { "type": "number", "minimum": 0 }
+      }
+    },
+    "attribution_summary": {
+      "type": "object",
+      "properties": {
+        "active_tokens": { "type": "integer", "minimum": 0 },
+        "reactive_tokens": { "type": "integer", "minimum": 0 },
+        "distortion_tokens": { "type": "integer", "minimum": 0 },
+        "fpai_spectral": { "type": "number", "minimum": 0, "maximum": 1 },
+        "fpai_linear": { "type": "number", "minimum": 0, "maximum": 1 },
+        "efficiency_class": { "type": "string" }
+      }
+    },
+    "ablation_summary": {
+      "type": ["object", "null"]
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["PASS", "FAIL", "UNKNOWN"] },
+        "findings_count": { "type": "integer", "minimum": 0 },
+        "is_disqualified": { "type": "boolean" }
+      },
+      "required": ["status", "is_disqualified"]
+    },
+    "errors_and_retries": {
+      "type": "object",
+      "properties": {
+        "error_count": { "type": "integer", "minimum": 0 },
+        "retry_count": { "type": "integer", "minimum": 0 },
+        "degradations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "metric_version": {
+      "type": "string",
+      "description": "FPAI calculation and evaluation engine version"
+    }
+  },
+  "required": [
+    "event_id",
+    "schema_version",
+    "timestamp",
+    "repo_id",
+    "task_id",
+    "execution_id",
+    "model_info",
+    "tokens_by_phase",
+    "task_result",
+    "latencies_ms",
+    "governance",
+    "metric_version"
+  ]
+}

@@ -1,0 +1,29 @@
+# FPAI Economy & Context Governance Configuration v2.0
+version: "2.0"
+governance:
+  zero_tolerance_secrets: true
+  zero_tolerance_pii: true
+  entropy_threshold: 4.5
+  min_secret_length: 20
+  enforce_lockfile_pinning: true
+
+budgets:
+  p0:
+    max_tokens: 50000
+    description: "Seed & Tier-1 critical context"
+  p1:
+    max_tokens: 150000
+    description: "Core architecture & orchestration"
+  p2:
+    max_tokens: 500000
+    description: "Research & background experiments"
+  p3:
+    max_tokens: 1000000
+    description: "Raw data & archived artifacts"
+
+ci_gates:
+  min_power_factor_spectral: 0.70
+  min_power_factor_linear: 0.65
+  max_attack_surface_index: 15.0
+  max_divergence_ratio: 0.35
+  fail_on_unpinned_lockfile: false

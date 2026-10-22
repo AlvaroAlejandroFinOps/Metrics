@@ -1,28 +1,30 @@
 """
-Evidence Collector for MetricsThinking™.
-Performs comprehensive, strictly READ-ONLY inspection of the target repository.
+Evidence Collector for MetricsThinking™ v4.0.
+Performs comprehensive, strictly READ-ONLY single-pass inspection of the target repository.
 """
 
 import os
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
 from typing import Any
-
 import yaml
 
-# Ensure local directory is in sys.path for standalone script execution
+# Ensure local directory is in sys.path
 _PKG_DIR = Path(__file__).resolve().parent
 if str(_PKG_DIR) not in sys.path:
     sys.path.insert(0, str(_PKG_DIR))
 
 try:
     from metricsthinking.models import EvidencePrimitiveSummary
+    from metricsthinking.backends import scan_directory, compute_ast_coupling
 except (ImportError, ValueError):
     try:
         from .models import EvidencePrimitiveSummary
+        from .backends import scan_directory, compute_ast_coupling
     except (ImportError, ValueError):
         from models import EvidencePrimitiveSummary
+        from backends import scan_directory, compute_ast_coupling
 
 
 class ProjectEvidence:
@@ -74,39 +76,42 @@ class ProjectEvidence:
         self.total_files: int = 0
         self.total_lines_of_code: int = 0
         self.file_extensions: dict[str, int] = {}
-        self.file_cache: dict[str, str] = {}  # RelPath -> Content snippet or full text for key files
+        self.file_cache: dict[str, str] = {}  # RelPath -> Content snippet or full text
+        self.file_hashes: dict[str, str] = {}
+        self.file_sizes: dict[str, int] = {}
+        self.file_lines: dict[str, int] = {}
+        self.file_tokens: dict[str, int] = {}
+
+        # v4.0 AST & Resilience & Security primitives
+        self.python_files: dict[str, str] = {}
+        self.ast_metrics: dict[str, Any] = {}
+        self.lockfile_pinned: bool = True
 
 
 class ProjectCollector:
     """Reads repository metadata and builds ProjectEvidence with anti-fraud filtering."""
 
-    EXCLUDED_DIRS = {
+    EXCLUDED_DIRS = [
         ".git", ".venv", "venv", "node_modules", "__pycache__",
         ".pytest_cache", ".ruff_cache", ".mypy_cache", "dist", "build",
         ".egg-info", "data/raw", "data/processed", "data/sandbox", ".system_generated"
-    }
-
-    KEY_FILE_EXTENSIONS = {
-        ".py", ".ts", ".js", ".json", ".yaml", ".yml", ".md",
-        ".toml", ".sh", ".ps1", ".sql", ".rs", ".go", ".tf", ".hcl",
-        ".proto", ".graphql", ".gql", ".cue", ".rego"
-    }
+    ]
 
     def __init__(self, target_path: str, evidence_hints: dict[str, Any] | None = None):
         self.evidence = ProjectEvidence(target_path)
         self.evidence_hints = evidence_hints or {}
 
     def collect(self) -> ProjectEvidence:
-        """Executes full read-only scan of the project."""
+        """Executes full single-pass read-only scan of the project."""
         if not self.evidence.exists:
             return self.evidence
 
         self._collect_git_metadata()
-        self._scan_filesystem()
+        self._single_pass_scan()
         self._classify_files()
-        self._read_key_content()
         self._parse_seed_metadata()
         self._classify_universal_primitives()
+        self._compute_ast_and_resilience()
         return self.evidence
 
     def _collect_git_metadata(self):
@@ -136,29 +141,56 @@ class ProjectCollector:
             except Exception:
                 self.evidence.git_branch = "unknown"
 
-    def _scan_filesystem(self):
-        """Walks tree ignoring noisy / artifact folders."""
-        for root, dirs, files in os.walk(self.evidence.root_path):
-            # Prune excluded directories
-            dirs[:] = [d for d in dirs if d not in self.EXCLUDED_DIRS and not d.startswith(".venv")]
+    def _single_pass_scan(self):
+        """Performs single-pass directory crawl via active backend with SHA-256 caching."""
+        records = scan_directory(
+            str(self.evidence.root_path),
+            ignore_patterns=self.EXCLUDED_DIRS,
+            include_content=True,
+        )
 
-            curr_dir = Path(root)
-            rel_dir = curr_dir.relative_to(self.evidence.root_path).as_posix()
-            if rel_dir != ".":
-                self.evidence.dirs.append(curr_dir)
-                self.evidence.rel_dirs.append(rel_dir)
+        seen_dirs: set[str] = set()
 
-            for f in files:
-                file_path = curr_dir / f
-                rel_path = file_path.relative_to(self.evidence.root_path).as_posix()
-                self.evidence.files.append(file_path)
-                self.evidence.rel_files.append(rel_path)
+        for rec in records:
+            rel = rec["path"]
+            file_path = self.evidence.root_path / rel
+            self.evidence.files.append(file_path)
+            self.evidence.rel_files.append(rel)
 
-                # Extension count
-                ext = file_path.suffix.lower() or "no_ext"
-                self.evidence.file_extensions[ext] = self.evidence.file_extensions.get(ext, 0) + 1
+            ext = file_path.suffix.lower() or "no_ext"
+            self.evidence.file_extensions[ext] = self.evidence.file_extensions.get(ext, 0) + 1
+
+            self.evidence.file_hashes[rel] = rec["sha256"]
+            self.evidence.file_sizes[rel] = rec["size_bytes"]
+            self.evidence.file_lines[rel] = rec["line_count"]
+            self.evidence.file_tokens[rel] = rec["token_estimate"]
+
+            if rec.get("content"):
+                self.evidence.file_cache[rel] = rec["content"]
+                if rel.endswith(".py"):
+                    self.evidence.python_files[rel] = rec["content"]
+
+            self.evidence.total_lines_of_code += rec["line_count"]
+
+            # Track parent dirs
+            parent = str(Path(rel).parent).replace("\\", "/")
+            if parent and parent != ".":
+                parts = parent.split("/")
+                acc = ""
+                for p in parts:
+                    acc = f"{acc}/{p}" if acc else p
+                    seen_dirs.add(acc)
+
+        for d in sorted(seen_dirs):
+            dir_p = self.evidence.root_path / d
+            self.evidence.dirs.append(dir_p)
+            self.evidence.rel_dirs.append(d)
 
         self.evidence.total_files = len(self.evidence.files)
+
+        # Check lockfile pinning
+        lockfiles = ["requirements.txt", "poetry.lock", "Pipfile.lock", "package-lock.json", "pnpm-lock.yaml", "Cargo.lock"]
+        self.evidence.lockfile_pinned = any(lf in self.evidence.rel_files for lf in lockfiles)
 
     def _classify_files(self):
         """Categorizes files into evidence buckets with strict anti-fraud filtering."""
@@ -180,11 +212,11 @@ class ProjectCollector:
             if lower.endswith(".context.yaml") or lower == ".context/tree.json":
                 self.evidence.context_files.append(rel)
 
-            # Schemas & Contracts (ignoring pure governance context files)
+            # Schemas & Contracts
             if (("schemas/" in lower and not lower.endswith(".context.yaml")) or lower.endswith(".schema.json") or lower.endswith(".proto") or lower.endswith(".graphql") or lower.endswith(".gql") or "openapi" in lower) and not lower.startswith("tests/"):
                 self.evidence.schemas.append(rel)
 
-            # Tests (valid test code files, not docs or json outputs in tests)
+            # Tests
             is_test = False
             if (("tests/" in lower or "test_" in lower or lower.endswith("_test.py") or ".spec." in lower) and any(lower.endswith(ext) for ext in [".py", ".ts", ".js", ".rs", ".go"])) and not lower.endswith(".context.yaml") and "tests/other" not in lower:
                 is_test = True
@@ -242,51 +274,10 @@ class ProjectCollector:
             if is_source:
                 self.evidence.source_files.append(rel)
 
-    def _read_key_content(self):
-        """Reads content of high-value metadata files with safety limits."""
-        files_to_read = []
-
-        # Read seeds
-        files_to_read.extend(self.evidence.seeds)
-        # Read manifests
-        files_to_read.extend(list(self.evidence.manifests.keys()))
-        # Read CI workflows
-        files_to_read.extend(self.evidence.ci_workflows)
-        # Read skills & agent instructions
-        files_to_read.extend(self.evidence.skills)
-        files_to_read.extend(self.evidence.agent_instructions)
-        files_to_read.extend(self.evidence.master_templates)
-        files_to_read.extend(self.evidence.skill_installers)
-        files_to_read.extend(self.evidence.coverage_benchmarks)
-        # Read docs and active plans
-        for rel in self.evidence.docs:
-            if "active" in rel.lower() or "foundation" in rel.lower() or rel.lower() in ["readme.md", "readme_es.md", "agents.md"]:
-                files_to_read.append(rel)
-        if ".context/tree.json" in self.evidence.rel_files:
-            files_to_read.append(".context/tree.json")
-
-        for rel in set(files_to_read):
-            abs_path = self.evidence.root_path / rel
-            if abs_path.exists() and abs_path.is_file():
-                try:
-                    # Limit reading to 200KB per file for safety
-                    content = abs_path.read_text(encoding="utf-8", errors="replace")[:200000]
-                    self.evidence.file_cache[rel] = content
-                except Exception:
-                    pass
-
     def _parse_seed_metadata(self):
         """Parses ThinkingSeed metadata if present in repo, or applies automatic archetype detection."""
         for seed_rel in self.evidence.seeds:
             content = self.evidence.file_cache.get(seed_rel, "")
-            if not content:
-                abs_path = self.evidence.root_path / seed_rel
-                if abs_path.exists() and abs_path.is_file():
-                    try:
-                        content = abs_path.read_text(encoding="utf-8", errors="replace")[:100000]
-                    except Exception:
-                        continue
-
             if content:
                 self.evidence.seed_detected = True
                 # Check for YAML frontmatter with ---
@@ -303,7 +294,7 @@ class ProjectCollector:
                                 break
                         except Exception:
                             pass
-                # Also check for ```yaml code block in seed if frontmatter wasn't matched
+                # Also check for ```yaml code block in seed
                 if not self.evidence.detected_archetype and "```yaml" in content:
                     code_blocks = content.split("```yaml")
                     for block in code_blocks[1:]:
@@ -320,21 +311,18 @@ class ProjectCollector:
                             pass
                 break
 
-        # Heuristic Auto-Detection if archetype is missing, generic, or modular-framework
+        # Heuristic Auto-Detection
         curr_arch = (self.evidence.detected_archetype or "").lower()
         if not curr_arch or curr_arch in ["modular-framework", "generic", "software", "unknown"]:
-            # 1. AI Agent Skill / Context Engineering:
             if (len(self.evidence.skills) > 0 or
                 ("AGENTS.md" in [f.name for f in self.evidence.files] and len(self.evidence.agent_instructions) > 0) or
                 len(self.evidence.skill_installers) > 0 or
                 any("skill" in s.lower() for s in self.evidence.seeds)):
                 self.evidence.detected_archetype = "agent-skill"
                 self.evidence.detected_mode = "governance_spec"
-            # 2. Data Platform:
             elif any(f.endswith("dbt_project.yml") or "dags/" in f or "airflow" in f for f in self.evidence.rel_files):
                 self.evidence.detected_archetype = "data-platform"
                 self.evidence.detected_mode = "pipeline_orchestration"
-            # 3. Web App:
             elif ("package.json" in self.evidence.rel_files and any(f.endswith((".tsx", ".jsx", ".vue", ".svelte")) for f in self.evidence.rel_files)):
                 self.evidence.detected_archetype = "web-app"
                 self.evidence.detected_mode = "source_code"
@@ -373,10 +361,16 @@ class ProjectCollector:
                 primitives["implementation"].append(rel)
 
         for p_type, p_files in primitives.items():
+            tot_lines = sum(self.evidence.file_lines.get(f, 0) for f in p_files)
             self.evidence.evidence_primitives[p_type] = EvidencePrimitiveSummary(
                 primitive_type=p_type,
                 file_count=len(p_files),
-                total_lines=0,  # Computed lazily if needed
+                total_lines=tot_lines,
                 sample_paths=p_files[:5],
                 verified_valid=len(p_files) > 0
             )
+
+    def _compute_ast_and_resilience(self):
+        """Computes AST coupling, instability, SPOFs and resilience pattern counts."""
+        if self.evidence.python_files:
+            self.evidence.ast_metrics = compute_ast_coupling(self.evidence.python_files)

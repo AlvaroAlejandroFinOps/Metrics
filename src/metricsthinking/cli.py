@@ -74,6 +74,8 @@ def main():
     audit_parser.add_argument("--prefix", default="MetricsThinking", help="Filename prefix for generated artifacts")
     audit_parser.add_argument("--quiet", "-q", action="store_true", help="Suppress console summary table")
     audit_parser.add_argument("--list-profiles", action="store_true", help="List all available profiles and exit")
+    audit_parser.add_argument("--prune", action="store_true", help="Apply reversible context pruning via .agentignore")
+    audit_parser.add_argument("--medallion", action="store_true", help="Run local Bronze -> Silver -> Gold telemetry pipeline")
 
     # 2. install-skill subcommand
     install_parser = subparsers.add_parser("install-skill", help="Install MetricsThinking™ skill for AI assistants")
@@ -103,7 +105,17 @@ def main():
     # 3. mcp subcommand
     mcp_parser = subparsers.add_parser("mcp", help="Start Model Context Protocol (MCP) JSON-RPC stdio server")
 
-    # 4. list-profiles subcommand
+    # 4. prune subcommand
+    prune_parser = subparsers.add_parser("prune", help="Generate or apply reversible context pruning plan")
+    prune_parser.add_argument("--target", "-t", default=".", help="Path to project repository")
+    prune_parser.add_argument("--apply", action="store_true", help="Apply pruning plan to .agentignore")
+
+    # 5. medallion subcommand
+    medallion_parser = subparsers.add_parser("medallion", help="Process local Bronze -> Silver -> Gold telemetry")
+    medallion_parser.add_argument("--raw-dir", default="data/raw/telemetry", help="Bronze telemetry directory")
+    medallion_parser.add_argument("--processed-dir", default="data/processed/telemetry", help="Silver/Gold directory")
+
+    # 6. list-profiles subcommand
     subparsers.add_parser("list-profiles", help="List all available evaluation profiles and archetypes")
 
     # Default fallback options on root parser for backwards compatibility
@@ -144,6 +156,28 @@ def main():
             from .mcp_server import run_mcp_server
             run_mcp_server()
 
+        elif args.command == "prune":
+            from .fpai.compensation import apply_pruning_plan
+            report, _ = run_audit(target_path=args.target, quiet=True)
+            if report.pruning_plan:
+                if args.apply:
+                    res = apply_pruning_plan(report.pruning_plan, repo_root=args.target, update_agentignore=True)
+                    print(f"[+] Pruning applied: {res['files_pruned_count']} files updated in .agentignore ({res['tokens_recovered']} tokens recovered).")
+                else:
+                    print(f"[*] Pruning plan generated for {args.target}:")
+                    print(f"    - Items to prune: {len(report.pruning_plan.items)}")
+                    print(f"    - Estimated tokens to recover: {report.pruning_plan.total_tokens_recovered}")
+                    print("    - Use --apply to update .agentignore safely.")
+
+        elif args.command == "medallion":
+            from .fpai.medallion import run_local_medallion_pipeline
+            res = run_local_medallion_pipeline(args.raw_dir, args.processed_dir)
+            print(f"[+] Medallion pipeline completed:")
+            print(f"    - Raw events read: {res['raw_read']}")
+            print(f"    - Silver records total: {res['silver_records_total']}")
+            print(f"    - Duplicates dropped: {res['duplicates_dropped']}")
+            print(f"    - Average FPAI Spectral: {res['gold_kpis'].get('average_fpai_spectral', 1.0):.4f}")
+
         else:
             # Default to audit
             selected_profile = getattr(args, "hint", None) or args.profile
@@ -153,7 +187,9 @@ def main():
                 archetype=getattr(args, "archetype", None),
                 out_dir=args.out_dir,
                 prefix=args.prefix,
-                quiet=args.quiet
+                quiet=args.quiet,
+                prune=getattr(args, "prune", False),
+                medallion=getattr(args, "medallion", False),
             )
     except Exception as e:
         print(f"[ERROR] MetricsThinking command failed: {e}", file=sys.stderr)

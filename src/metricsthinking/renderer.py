@@ -37,6 +37,9 @@ class ReportRenderer:
             self._render_mermaid_roadmap(),
             self._render_forensic_breakdown(),
             self._render_remediation_plan(),
+            self._render_spectral_context_efficiency(),
+            self._render_security_and_attack_surface(),
+            self._render_systems_modularity_and_resilience(),
             self._render_footer()
         ]
         return "\n\n".join(sections)
@@ -122,6 +125,14 @@ class ReportRenderer:
 
         # Write Roadmap
         roadmap_path.write_text(roadmap_content, encoding="utf-8")
+
+        # Write Context Pruning Plan if present
+        if self.report.pruning_plan:
+            pruning_path = active_plans_dir / "CONTEXT_PRUNING_PLAN.json"
+            pruning_path.write_text(
+                self.report.pruning_plan.model_dump_json(indent=2),
+                encoding="utf-8"
+            )
 
         # Write JSON
         json_data = self.report.model_dump()
@@ -342,6 +353,84 @@ MetricsThinking™ ha completado la auditoría forense estricta basada en eviden
                 f"| {p_badge} | `{item.module_id}` | `{item.criterion_id}` | {item.action} | **+{item.impact_score:.2f}%** | {files_str} |"
             )
 
+        return "\n".join(lines)
+
+
+    def _render_spectral_context_efficiency(self) -> str:
+        if not self.report.fpai:
+            return ""
+        fpai = self.report.fpai
+        lines = [
+            "---",
+            "",
+            "## 6. EFICIENCIA CONTEXTUAL Y VECTOR ESPECTRAL (FPAI ECONOMY)",
+            "",
+            "Métrica canónica de densidad cognitiva y preservación de potencia activa $P$:",
+            "",
+            "| Componente de Potencia | Símbolo | Tokens | Ratio | Estado |",
+            "|:---|:---:|:---:|:---:|:---|",
+            f"| **Potencia Activa** (Working Set) | $P$ | `{fpai.p_active:.0f}` | `{fpai.active_ratio:.1%}` | 🟢 Preservada |",
+            f"| **Potencia Reactiva Inerte** | $Q_{{dead}}$ | `{fpai.q_dead:.0f}` | `{fpai.dead_ratio:.1%}` | ⚪ Inerte |",
+            f"| **Potencia Reactiva Redundante** | $Q_{{dup}}$ | `{fpai.q_dup:.0f}` | `{fpai.redundant_ratio:.1%}` | 🟡 Duplicada |",
+            f"| **Distorsión Estructural** | $D$ | `{fpai.d_structural:.0f}` | `{fpai.distortion_ratio:.1%}` | 🔴 Conflicto |",
+            f"| **Potencia Aparente Espectral** | $S_{{spectral}}$ | `{fpai.s_spectral:.0f}` | — | $\\sqrt{{P^2 + Q^2 + D^2}}$ |",
+            f"| **Potencia Aparente Lineal** | $S_{{linear}}$ | `{fpai.s_linear:.0f}` | — | $P + Q + D$ |",
+            "",
+            f"- **Factor de Potencia Espectral ($PF_{{spectral}}$):** `{fpai.power_factor_spectral:.3f}` *(Meta >= 0.70)*",
+            f"- **Factor de Potencia Lineal ($PF_{{linear}}$):** `{fpai.power_factor_linear:.3f}`",
+            f"- **Ratio de Divergencia Espectral:** `{fpai.divergence_ratio:.1%}`",
+            f"- **Estado de Calibración:** `{fpai.calibration_state}` (Ganancia $G={fpai.gain_coefficient:.2f}$)",
+        ]
+        return "\n".join(lines)
+
+    def _render_security_and_attack_surface(self) -> str:
+        if not self.report.security:
+            return ""
+        sec = self.report.security
+        badge_surf = "🟢 BAJA" if sec.attack_surface_index <= 15.0 else ("🟡 MEDIA" if sec.attack_surface_index <= 40.0 else "🔴 CRÍTICA")
+        badge_ent = "🟢 ÓPTIMA" if sec.shannon_entropy_max <= 4.5 else "🔴 ALERTA"
+        badge_pii = "🟢 CERO" if sec.pii_matches_count == 0 else "🔴 VIOLACIÓN"
+        badge_inj = "🟢 INMUNE" if sec.prompt_injection_surface_count == 0 else "🔴 DETECTADA"
+        badge_lock = "🟢 FIJADO" if sec.supply_chain_lockfile_pinned else "🔴 NO FIJADO"
+
+        lines = [
+            "---",
+            "",
+            "## 7. VECTOR DE SEGURIDAD Y SUPERFICIE DE ATAQUE AGÉNTICA",
+            "",
+            "Auditoría Zero-Tolerance de credenciales expuestas, entropía de Shannon e inyecciones:",
+            "",
+            "| Métrica de Seguridad | Valor Registrado | Umbral de Alerta | Estado |",
+            "|:---|:---:|:---:|:---:|",
+            f"| **Índice de Superficie de Ataque** | `{sec.attack_surface_index:.1f} / 100` | `<= 15.0` | {badge_surf} |",
+            f"| **Entropía de Shannon Máxima ($H$)** | `{sec.shannon_entropy_max:.2f}` bits | `<= 4.50` | {badge_ent} |",
+            f"| **Coincidencias PII (Zero-Tolerance)** | `{sec.pii_matches_count}` | `0` | {badge_pii} |",
+            f"| **Inyecciones de Prompt Detectadas** | `{sec.prompt_injection_surface_count}` | `0` | {badge_inj} |",
+            f"| **Pinning de Lockfile (Supply Chain)** | `{'Sí' if sec.supply_chain_lockfile_pinned else 'No'}` | `Requerido` | {badge_lock} |",
+        ]
+        return "\n".join(lines)
+
+    def _render_systems_modularity_and_resilience(self) -> str:
+        if not self.report.resilience:
+            return ""
+        res = self.report.resilience
+        spof_str = ", ".join(res.spof_nodes) if res.spof_nodes else "Ninguno"
+        lines = [
+            "---",
+            "",
+            "## 8. VECTOR DE RESILIENCIA Y ACOPLAMIENTO DE SISTEMAS",
+            "",
+            "Análisis estático de estabilidad modular $I = \\frac{{C_e}}{{C_a + C_e}}$ y puntos únicos de fallo (SPOFs):",
+            "",
+            f"- **Módulos Analizados:** `{len(res.instability_i)}`",
+            f"- **Puntos Únicos de Fallo (SPOFs) Detectados:** `{len(res.spof_nodes)}` ({spof_str})",
+            f"- **Cobertura de Patrones de Tolerancia a Fallos:** `{res.resilience_coverage_ratio:.1%}`",
+            "- **Recuento de Patrones Resilientes:**",
+            f"  - Timeouts: `{res.resilience_patterns_count.get('timeout', 0)}`",
+            f"  - Retries / Backoffs: `{res.resilience_patterns_count.get('retry', 0)}`",
+            f"  - Circuit Breakers: `{res.resilience_patterns_count.get('circuit_breaker', 0)}`",
+            f"  - Fallbacks: `{res.resilience_patterns_count.get('fallback', 0)}`",
+        ]
         return "\n".join(lines)
 
     def _render_footer(self) -> str:

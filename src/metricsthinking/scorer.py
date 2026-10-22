@@ -21,7 +21,12 @@ try:
         InspectionMode,
         ProjectAuditReport,
         RemediationItem,
+        SecurityVulnerabilityReport,
+        SystemsResilienceReport,
     )
+    from metricsthinking.fpai.spectral_engine import compute_spectral_vector
+    from metricsthinking.fpai.gatekeeper import scan_repository_security
+    from metricsthinking.fpai.compensation import generate_pruning_plan
 except (ImportError, ValueError):
     try:
         from .collector import ProjectEvidence
@@ -31,7 +36,12 @@ except (ImportError, ValueError):
             InspectionMode,
             ProjectAuditReport,
             RemediationItem,
+            SecurityVulnerabilityReport,
+            SystemsResilienceReport,
         )
+        from .fpai.spectral_engine import compute_spectral_vector
+        from .fpai.gatekeeper import scan_repository_security
+        from .fpai.compensation import generate_pruning_plan
     except (ImportError, ValueError):
         from collector import ProjectEvidence
         from models import (
@@ -77,6 +87,56 @@ class AuditScorer:
             "inspection_mode": mode.value,
         }
 
+        # Compute FPAI spectral vector
+        tot_tokens = sum(self.evidence.file_tokens.values()) if self.evidence.file_tokens else 1000
+        dead_files = [
+            f for f in self.evidence.rel_files
+            if f.endswith((".tmp", ".bak", ".swp"))
+            or "archive" in f.lower()
+            or "scratch" in f.lower()
+        ]
+        q_dead_tokens = sum(self.evidence.file_tokens.get(f, 0) for f in dead_files)
+        q_dup_tokens = int(tot_tokens * 0.03) if tot_tokens > 0 else 0
+        p_active_tokens = max(0, tot_tokens - q_dead_tokens - q_dup_tokens)
+
+        fpai_vec = compute_spectral_vector(
+            p_active=float(p_active_tokens),
+            q_dead=float(q_dead_tokens),
+            q_dup=float(q_dup_tokens),
+            d_structural=0.0,
+            gain_coefficient=1.0,
+        )
+
+        # Compute Security Report
+        sec_report = scan_repository_security(
+            self.evidence.file_cache,
+            lockfile_present=self.evidence.lockfile_pinned,
+        )
+
+        # Compute Systems Resilience Report
+        ast_m = self.evidence.ast_metrics or {}
+        res_report = SystemsResilienceReport(
+            afferent_coupling_ca=ast_m.get("afferent_coupling_ca", {}),
+            efferent_coupling_ce=ast_m.get("efferent_coupling_ce", {}),
+            instability_i=ast_m.get("instability_i", {}),
+            spof_nodes=ast_m.get("spof_nodes", []),
+            resilience_patterns_count=ast_m.get("resilience_patterns_count", {}),
+            resilience_coverage_ratio=ast_m.get("resilience_coverage_ratio", 0.0),
+        )
+
+        # Compute Context Pruning Plan
+        dead_candidates = [
+            f for f in self.evidence.rel_files
+            if f.endswith(".tmp") or f.endswith(".bak") or "tests/other" in f
+        ]
+        prune_plan = generate_pruning_plan(
+            target_path=str(self.evidence.root_path),
+            dead_files=dead_candidates,
+            redundant_files=[],
+            structural_files=[],
+            file_sizes=self.evidence.file_sizes,
+        )
+
         report = ProjectAuditReport(
             project_name=self.evidence.project_name,
             project_path=str(self.evidence.root_path),
@@ -92,7 +152,11 @@ class AuditScorer:
             evidence_primitives=self.evidence.evidence_primitives,
             modules=self.modules,
             remediation_plan=remediation_items,
-            stats=stats
+            stats=stats,
+            fpai=fpai_vec,
+            security=sec_report,
+            resilience=res_report,
+            pruning_plan=prune_plan,
         )
 
         return report

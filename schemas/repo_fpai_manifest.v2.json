@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepoFPAIManifestV2",
+  "description": "Authoritative Multi-Dimensional Context Efficiency & AI Power Factor Manifest v2.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "timestamp",
+    "repository_root",
+    "scores",
+    "tokens",
+    "governance",
+    "efficiency_class",
+    "confidence",
+    "findings"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["2.0.0"] },
+    "manifest_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "repository_root": { "type": "string" },
+    "scores": {
+      "type": "object",
+      "required": ["fpai_structural", "fpai_structural_spectral", "fpai_structural_linear", "selected_mode"],
+      "properties": {
+        "fpai_structural": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "fpai_structural_spectral": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "fpai_structural_linear": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "selected_mode": { "type": "string", "enum": ["spectral", "linear"] },
+        "fpai_task": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "fpai_inference": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "fpai_composite": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 }
+      },
+      "additionalProperties": false
+    },
+    "tokens": {
+      "type": "object",
+      "required": [
+        "apparent_tokens_spectral",
+        "apparent_tokens_linear",
+        "active_tokens",
+        "reactive_tokens",
+        "distortion_tokens",
+        "total_scanned_tokens"
+      ],
+      "properties": {
+        "apparent_tokens_spectral": { "type": "integer", "minimum": 0 },
+        "apparent_tokens_linear": { "type": "integer", "minimum": 0 },
+        "active_tokens": { "type": "integer", "minimum": 0 },
+        "reactive_tokens": { "type": "integer", "minimum": 0 },
+        "distortion_tokens": { "type": "integer", "minimum": 0 },
+        "total_scanned_tokens": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "required": ["status", "score", "is_deployable", "violations_count"],
+      "properties": {
+        "status": { "type": "string", "enum": ["PASS", "FAIL", "UNKNOWN"] },
+        "score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "is_deployable": { "type": "boolean" },
+        "violations_count": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "efficiency_class": {
+      "type": "string",
+      "enum": ["CLASS_A", "CLASS_B", "CLASS_C", "DISQUALIFIED_SECURITY"]
+    },
+    "confidence": {
+      "type": "object",
+      "required": ["confidence_score", "coverage_files_pct", "coverage_tokens_pct"],
+      "properties": {
+        "confidence_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "coverage_files_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+        "coverage_tokens_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+        "languages_analyzed": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "Finding": {
+      "type": "object",
+      "required": ["file_path", "line_start", "line_end", "power_type", "severity", "token_cost", "description"],
+      "properties": {
+        "file_path": { "type": "string" },
+        "line_start": { "type": "integer", "minimum": 1 },
+        "line_end": { "type": "integer", "minimum": 1 },
+        "power_type": { "type": "string" },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "CRITICAL"] },
+        "token_cost": { "type": "integer", "minimum": 0 },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

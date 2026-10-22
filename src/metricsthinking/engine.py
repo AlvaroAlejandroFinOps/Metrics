@@ -150,7 +150,9 @@ def run_audit(
     archetype: str | None = None,
     out_dir: str | None = None,
     prefix: str = "MetricsThinking",
-    quiet: bool = False
+    quiet: bool = False,
+    prune: bool = False,
+    medallion: bool = False,
 ) -> tuple[ProjectAuditReport, dict[str, Path]]:
     """Executes full 4-phase MetricsThinking™ audit."""
     target = Path(target_path).resolve()
@@ -215,6 +217,20 @@ def run_audit(
     # Phase 4: Render & Write
     renderer = ReportRenderer(report)
     artifacts = renderer.write_artifacts(out_path, filename_prefix=prefix)
+
+    if prune and report.pruning_plan:
+        from metricsthinking.fpai.compensation import apply_pruning_plan
+        prune_res = apply_pruning_plan(report.pruning_plan, repo_root=str(target), update_agentignore=True)
+        if not quiet:
+            print(f"[+] Reversible context pruning applied: {prune_res['files_pruned_count']} files updated in .agentignore.")
+
+    if medallion:
+        from metricsthinking.fpai.medallion import run_local_medallion_pipeline
+        raw_t = target / "data" / "raw" / "telemetry"
+        proc_t = target / "data" / "processed" / "telemetry"
+        med_res = run_local_medallion_pipeline(str(raw_t), str(proc_t))
+        if not quiet:
+            print(f"[+] Local Medallion pipeline completed: {med_res['silver_records_total']} Silver records, {med_res['duplicates_dropped']} duplicates dropped.")
 
     if not quiet:
         print("\n" + "=" * 75)

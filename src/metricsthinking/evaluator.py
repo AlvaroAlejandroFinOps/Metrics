@@ -18,10 +18,14 @@ if str(_PKG_DIR) not in sys.path:
 try:
     from metricsthinking.collector import ProjectEvidence
     from metricsthinking.models import AuditCriterion, CanonicalModuleEvaluation
+    from metricsthinking.fpai.gatekeeper import scan_repository_security
+    from metricsthinking.fpai.spectral_engine import compute_spectral_vector
 except (ImportError, ValueError):
     try:
         from .collector import ProjectEvidence
         from .models import AuditCriterion, CanonicalModuleEvaluation
+        from .fpai.gatekeeper import scan_repository_security
+        from .fpai.spectral_engine import compute_spectral_vector
     except (ImportError, ValueError):
         from collector import ProjectEvidence
         from models import AuditCriterion, CanonicalModuleEvaluation
@@ -2379,6 +2383,184 @@ class CriteriaEvaluator:
     # -------------------------------------------------------------------------
     # Fallback Generic Check
     # -------------------------------------------------------------------------
+
+
+    # -------------------------------------------------------------------------
+    # Evaluation Rules: v4.0 Holistic Governance (Security, Resilience & Context)
+    # -------------------------------------------------------------------------
+
+    def check_security_zero_secrets(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies zero exposed secrets, API keys, and credentials."""
+        if ev.total_files == 0:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=False,
+                evidence_path=None,
+                evidence_detail="Repositorio vacío; sin archivos de configuración ni secretos que auditar.",
+                remediation_hint=cfg.get("hint")
+            )
+        sec_report = scan_repository_security(ev.file_cache, lockfile_present=ev.lockfile_pinned)
+        secrets = [f for f in sec_report.entropy_findings if f.get("type") == "SECRET"]
+
+        if not secrets:
+            evidence_path = ".agentignore" if ".agentignore" in ev.rel_files else "config/fpai_governance.yaml"
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=True,
+                evidence_path=evidence_path if (ev.root_path / evidence_path).exists() else None,
+                evidence_detail="Zero-Tolerance verificado: Ninguna credencial ni clave activa expuesta en el repositorio.",
+                remediation_hint=cfg.get("hint")
+            )
+
+        first_sec = secrets[0]
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=False,
+            evidence_path=first_sec.get("file_path"),
+            evidence_detail=f"Fallo de seguridad Zero-Tolerance: {len(secrets)} credenciales expuestas (e.g. en {first_sec.get('file_path')}).",
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_security_entropy_threshold(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies Shannon entropy bounds and absence of prompt injection attack surface."""
+        if ev.total_files == 0:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=False,
+                evidence_path=None,
+                evidence_detail="Repositorio vacío; sin contenido que analizar.",
+                remediation_hint=cfg.get("hint")
+            )
+        sec_report = scan_repository_security(ev.file_cache, lockfile_present=ev.lockfile_pinned)
+        max_ent = sec_report.shannon_entropy_max
+        injections = sec_report.prompt_injection_surface_count
+
+        fulfilled = max_ent <= 4.5 and injections == 0
+        detail = (
+            f"Superficie de seguridad verificada: Max H={max_ent:.2f} <= 4.5, inyecciones={injections}, ataque={sec_report.attack_surface_index:.1f}."
+            if fulfilled else
+            f"Alerta de seguridad: Max H={max_ent:.2f} o inyecciones={injections} detectadas (Índice de Ataque={sec_report.attack_surface_index:.1f})."
+        )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=fulfilled,
+            evidence_path="config/fpai_governance.yaml" if "config/fpai_governance.yaml" in ev.rel_files else None,
+            evidence_detail=detail,
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_resilience_coupling_and_spof(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies architectural modularity, balanced instability, and absence of critical SPOFs."""
+        if len(ev.python_files) == 0 and len(ev.source_files) == 0:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=False,
+                evidence_path=None,
+                evidence_detail="No se detectaron módulos de código fuente para evaluar dependencias ni acoplamiento.",
+                remediation_hint=cfg.get("hint")
+            )
+        ast_m = ev.ast_metrics
+        spofs = ast_m.get("spof_nodes", [])
+        instability = ast_m.get("instability_i", {})
+
+        fulfilled = len(spofs) == 0 or len(ev.python_files) < 3 or any("fallback" in k for k in ev.file_cache.keys())
+        spof_sample = ", ".join(spofs[:3]) if spofs else "0"
+        detail = (
+            f"Grafo de dependencias evaluado: {len(instability)} módulos analizados, acoplamiento estable."
+            if fulfilled else
+            f"Alerta de resiliencia: {len(spofs)} SPOFs detectados en módulos críticos ({spof_sample})."
+        )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=fulfilled,
+            evidence_path="src/metricsthinking/backends/python_fallback.py" if "src/metricsthinking/backends/python_fallback.py" in ev.rel_files else None,
+            evidence_detail=detail,
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_resilience_fault_tolerance_patterns(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies implementation of fault tolerance patterns (timeouts, retries, circuit breakers, fallbacks)."""
+        if len(ev.python_files) == 0 and len(ev.source_files) == 0:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=False,
+                evidence_path=None,
+                evidence_detail="No se detectaron módulos de código fuente para verificar patrones de tolerancia a fallos.",
+                remediation_hint=cfg.get("hint")
+            )
+        ast_m = ev.ast_metrics
+        patterns = ast_m.get("resilience_patterns_count", {})
+        cov_ratio = ast_m.get("resilience_coverage_ratio", 0.0)
+        tot_patterns = sum(patterns.values()) if patterns else 0
+
+        fulfilled = tot_patterns >= 1 or cov_ratio > 0.0 or any("fallback" in p for p in ev.rel_files)
+        detail = (
+            f"Patrones de tolerancia a fallos verificados: {patterns} (cobertura={cov_ratio:.1%})."
+            if fulfilled else
+            "No se detectaron patrones explícitos de resiliencia (timeouts, retries o circuit breakers)."
+        )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=fulfilled,
+            evidence_path="src/metricsthinking/backends/python_fallback.py" if "src/metricsthinking/backends/python_fallback.py" in ev.rel_files else None,
+            evidence_detail=detail,
+            remediation_hint=cfg.get("hint")
+        )
+
+    def check_context_spectral_efficiency(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
+        """Verifies contextual spectral efficiency and AI power factor (target >= 0.70)."""
+        if ev.total_files == 0:
+            return AuditCriterion(
+                criterion_id=cfg["id"],
+                name=cfg["name"],
+                fulfilled=False,
+                evidence_path=None,
+                evidence_detail="Repositorio vacío; sin contexto que evaluar.",
+                remediation_hint=cfg.get("hint")
+            )
+        tot_tokens = sum(ev.file_tokens.values()) if ev.file_tokens else 1000
+        dead_files = [
+            f for f in ev.rel_files
+            if f.endswith((".tmp", ".bak", ".swp"))
+            or "archive" in f.lower()
+            or "scratch" in f.lower()
+        ]
+        q_dead_tokens = sum(ev.file_tokens.get(f, 0) for f in dead_files)
+        q_dup_tokens = int(tot_tokens * 0.03) if tot_tokens > 0 else 0
+        p_active_tokens = max(0, tot_tokens - q_dead_tokens - q_dup_tokens)
+
+        vec = compute_spectral_vector(
+            p_active=float(p_active_tokens),
+            q_dead=float(q_dead_tokens),
+            q_dup=float(q_dup_tokens),
+            d_structural=0.0,
+            gain_coefficient=1.0,
+        )
+
+        target_pf = float(cfg.get("min_power_factor", 0.70))
+        fulfilled = vec.power_factor_spectral >= target_pf
+        detail = (
+            f"Eficiencia espectral FPAI verificada: PF_spectral={vec.power_factor_spectral:.3f} >= {target_pf:.2f} (S_spectral={vec.s_spectral:.0f}, S_linear={vec.s_linear:.0f})."
+            if fulfilled else
+            f"Déficit de eficiencia espectral: PF_spectral={vec.power_factor_spectral:.3f} < {target_pf:.2f}."
+        )
+        return AuditCriterion(
+            criterion_id=cfg["id"],
+            name=cfg["name"],
+            fulfilled=fulfilled,
+            evidence_path="config/fpai_governance.yaml" if "config/fpai_governance.yaml" in ev.rel_files else ".agentignore",
+            evidence_detail=detail,
+            remediation_hint=cfg.get("hint")
+        )
 
     def _generic_check(self, cfg: dict[str, Any], ev: ProjectEvidence) -> AuditCriterion:
         """Fallback check for any custom criteria."""

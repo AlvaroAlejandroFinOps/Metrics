@@ -108,6 +108,63 @@ class RemediationItem(BaseModel):
     files_to_touch: list[str] = Field(default_factory=list)
 
 
+class FPAISpectralVector(BaseModel):
+    p_active: float = Field(..., description="Active contextual power (working set tokens)")
+    q_dead: float = Field(0.0, description="Reactive dead power (unreachable/dormant tokens)")
+    q_dup: float = Field(0.0, description="Reactive redundant power (duplicate/shingled tokens)")
+    d_structural: float = Field(0.0, description="Structural distortion (topology/schema violations)")
+    s_spectral: float = Field(..., description="Spectral apparent power sqrt(P^2 + Q^2 + D^2)")
+    s_linear: float = Field(..., description="Scalar linear apparent power P + Q + D")
+    divergence_ratio: float = Field(..., description="Delta between S_spectral and S_linear")
+    power_factor_spectral: float = Field(..., description="P / S_spectral (target >= 0.70)")
+    power_factor_linear: float = Field(..., description="P / S_linear")
+    active_ratio: float = Field(..., description="P / S_linear")
+    dead_ratio: float = Field(0.0, description="Q_dead / S_linear")
+    redundant_ratio: float = Field(0.0, description="Q_dup / S_linear")
+    distortion_ratio: float = Field(0.0, description="D / S_linear")
+    calibration_state: str = Field("deterministic", description="CALIBRATED | COLD_START | DETERMINISTIC")
+    gain_coefficient: float = Field(1.0, description="Decoupled gain G from historical calibration")
+
+
+class SecurityVulnerabilityReport(BaseModel):
+    shannon_entropy_max: float = Field(0.0, description="Max Shannon entropy detected across files")
+    entropy_findings: list[dict[str, Any]] = Field(default_factory=list)
+    pii_matches_count: int = Field(0)
+    pii_findings: list[dict[str, Any]] = Field(default_factory=list)
+    prompt_injection_surface_count: int = Field(0)
+    prompt_injection_findings: list[dict[str, Any]] = Field(default_factory=list)
+    supply_chain_lockfile_pinned: bool = Field(True)
+    attack_surface_index: float = Field(0.0, description="Calculated surface score 0.0-100.0 (lower is better)")
+
+
+class SystemsResilienceReport(BaseModel):
+    afferent_coupling_ca: dict[str, int] = Field(default_factory=dict)
+    efferent_coupling_ce: dict[str, int] = Field(default_factory=dict)
+    instability_i: dict[str, float] = Field(default_factory=dict)
+    spof_nodes: list[str] = Field(default_factory=list)
+    resilience_patterns_count: dict[str, int] = Field(default_factory=dict)
+    resilience_coverage_ratio: float = Field(0.0, description="Ratio of critical nodes protected by timeout/retry/breaker")
+
+
+class PruningActionItem(BaseModel):
+    file_path: str
+    line_count: int
+    token_estimate: int
+    pruning_type: str  # Q_DEAD | Q_DUP | D_STRUCTURAL
+    sha256_before: str
+    justification: str
+    reversible: bool = True
+
+
+class ContextPruningPlan(BaseModel):
+    target_path: str
+    items: list[PruningActionItem] = Field(default_factory=list)
+    total_tokens_recovered: int = 0
+    active_tokens_remaining: int = 0
+    power_factor_target: float = 0.85
+    generated_at: str
+
+
 class ProjectAuditReport(BaseModel):
     project_name: str
     project_path: str
@@ -124,6 +181,10 @@ class ProjectAuditReport(BaseModel):
     modules: list[CanonicalModuleEvaluation]
     remediation_plan: list[RemediationItem] = Field(default_factory=list)
     stats: dict[str, Any] = Field(default_factory=dict)
+    fpai: FPAISpectralVector | None = None
+    security: SecurityVulnerabilityReport | None = None
+    resilience: SystemsResilienceReport | None = None
+    pruning_plan: ContextPruningPlan | None = None
 
     @property
     def consolidated_score(self) -> float:
