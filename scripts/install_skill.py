@@ -46,19 +46,32 @@ def install_antigravity(dest_root: Path, is_global: bool = False, dry_run: bool 
                 shutil.copy2(src_skill_md, target_file)
             created.append(target_file)
 
-        # Copy scripts if global install
+        # Copy scripts and packages if global install
         if is_global:
             scripts_dest = target_skill_dir / "scripts"
             scripts_dest.mkdir(parents=True, exist_ok=True)
-            for py_file in (REPO_ROOT / "src" / "metricsthinking").glob("*.py"):
-                shutil.copy2(py_file, scripts_dest / py_file.name)
-                created.append(scripts_dest / py_file.name)
+            src_pkg = REPO_ROOT / "src" / "metricsthinking"
+            if src_pkg.exists():
+                pkg_dest = scripts_dest / "metricsthinking"
+                if pkg_dest.exists():
+                    shutil.rmtree(pkg_dest)
+                shutil.copytree(src_pkg, pkg_dest)
+                created.append(pkg_dest)
+                for py_file in src_pkg.glob("*.py"):
+                    shutil.copy2(py_file, scripts_dest / py_file.name)
+                    created.append(scripts_dest / py_file.name)
             
             profiles_dest = target_skill_dir / "profiles"
             profiles_dest.mkdir(parents=True, exist_ok=True)
             for yaml_file in (REPO_ROOT / "config" / "profiles").glob("*.yaml"):
                 shutil.copy2(yaml_file, profiles_dest / yaml_file.name)
                 created.append(profiles_dest / yaml_file.name)
+
+            gov_yaml = REPO_ROOT / "config" / "fpai_governance.yaml"
+            if gov_yaml.exists():
+                gov_dest = target_skill_dir / "fpai_governance.yaml"
+                shutil.copy2(gov_yaml, gov_dest)
+                created.append(gov_dest)
     else:
         created.append(target_skill_dir / "SKILL.md")
 
@@ -177,6 +190,11 @@ def main():
         help="Target AI provider to install skill for (default: all)"
     )
     parser.add_argument(
+        "--all", "-a",
+        action="store_true",
+        help="Install skill for all supported AI providers (alias for --target all)"
+    )
+    parser.add_argument(
         "--dest", "-d",
         default=".",
         help="Target destination directory (default: current workspace)"
@@ -194,8 +212,9 @@ def main():
     )
 
     args = parser.parse_args()
+    target_provider = "all" if args.all else args.target
     run_installer(
-        target=args.target,
+        target=target_provider,
         dest=args.dest,
         is_global=args.is_global,
         dry_run=args.dry_run

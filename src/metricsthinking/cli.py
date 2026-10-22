@@ -34,7 +34,7 @@ def list_available_profiles() -> None:
             break
 
     print("\n" + "=" * 75)
-    print("  METRICSTHINKING™ v3.0 UNIVERSAL PROFILES & ARCHETYPES")
+    print("  METRICSTHINKING™ v4.0 UNIVERSAL PROFILES & ARCHETYPES")
     print("=" * 75)
 
     if not profiles_dir or not profiles_dir.exists():
@@ -60,7 +60,7 @@ def list_available_profiles() -> None:
 def main():
     parser = argparse.ArgumentParser(
         prog="metricsthinking",
-        description="MetricsThinking™ v3.0: Universal Project Evaluation Engine & Multi-Provider AI Skill"
+        description="MetricsThinking™ v4.0: Universal Project Evaluation Engine & Multi-Provider AI Skill"
     )
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
@@ -84,6 +84,11 @@ def main():
         choices=["all", "antigravity", "claude", "cursor", "copilot", "mcp"],
         default="all",
         help="Target AI assistant / platform (default: all)"
+    )
+    install_parser.add_argument(
+        "--all", "-a",
+        action="store_true",
+        help="Install skill for all supported AI providers (alias for --target all)"
     )
     install_parser.add_argument(
         "--dest", "-d",
@@ -135,22 +140,33 @@ def main():
             return
 
         if args.command == "install-skill":
-            # Import installer logic
+            target_provider = "all" if getattr(args, "all", False) else args.target
             script_installer = Path(__file__).resolve().parent.parent.parent / "scripts" / "install_skill.py"
+            if not script_installer.exists():
+                script_installer = Path.cwd() / "scripts" / "install_skill.py"
             if script_installer.exists():
                 import importlib.util
                 spec = importlib.util.spec_from_file_location("installer", script_installer)
                 installer_mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(installer_mod)
                 installer_mod.run_installer(
-                    target=args.target,
+                    target=target_provider,
                     dest=args.dest,
                     is_global=args.is_global,
                     dry_run=args.dry_run
                 )
             else:
-                print("[ERROR] Installer script not found.", file=sys.stderr)
-                sys.exit(1)
+                try:
+                    import scripts.install_skill as installer_mod
+                    installer_mod.run_installer(
+                        target=target_provider,
+                        dest=args.dest,
+                        is_global=args.is_global,
+                        dry_run=args.dry_run
+                    )
+                except ImportError:
+                    print("[ERROR] Installer script not found.", file=sys.stderr)
+                    sys.exit(1)
 
         elif args.command == "mcp":
             from .mcp_server import run_mcp_server
@@ -198,4 +214,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

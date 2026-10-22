@@ -1,18 +1,18 @@
 ---
-description: MetricsThinking™ Forensic Project Auditor and Technical Maturity Evaluator
+description: MetricsThinking™ v4.0 Forensic Project Auditor and Technical Maturity Evaluator
 globs: ["**/*"]
 alwaysApply: false
 ---
 
-# MetricsThinking™ Cursor Rule
+# MetricsThinking™ Cursor Rule (v4.0 Holistic Governance)
 
-Use this rule whenever the user asks for a project audit, code quality review, architecture maturity assessment, technical debt evaluation, or mentions `/metrics`.
+Use this rule whenever the user asks for a project audit, code quality review, architecture maturity assessment, technical debt evaluation, context efficiency analysis, or mentions `/metrics`.
 
 ## Protocol
 
 1. **Verify Evidence (Ground Truth First)**:
-   - Inspect files physically (`src/`, `tests/`, `README.md`, `pyproject.toml`, `package.json`).
-   - Flag any unfinished stubs or unfulfilled architectural promises.
+   - Inspect files physically (`src/`, `tests/`, `README.md`, `pyproject.toml`, `package.json`, `config/`).
+   - Flag any unfinished stubs, placeholders (`pass`, `TODO`, `FIXME`), or unfulfilled architectural promises.
 
 2. **Execute Audit via CLI**:
    Run the terminal command:
@@ -23,14 +23,21 @@ Use this rule whenever the user asks for a project audit, code quality review, a
    ```bash
    python -m metricsthinking.cli audit --target .
    ```
+   Specialized archetypes (14 profiles available):
+   ```bash
+   metricsthinking audit --target . --profile agent-skill
+   metricsthinking audit --target . --profile data-platform
+   metricsthinking audit --target . --profile web-app
+   ```
 
-3. **Check Outputs**:
-   - `artifacts/MetricsThinking.md`
-   - `artifacts/MetricsThinking.json`
-   - `artifacts/plans/active/INFERRED_ROADMAP.md`
+3. **Check Synchronized Outputs**:
+   - `artifacts/MetricsThinking.md` (Executive Markdown with Mermaid LR)
+   - `artifacts/MetricsThinking.json` (Machine-readable forensic telemetry)
+   - `artifacts/plans/active/INFERRED_ROADMAP.md` (10-phase operational roadmap)
+   - `artifacts/plans/active/CONTEXT_PRUNING_PLAN.json` (Reversible context pruning plan)
 
 4. **Present Results**:
-   - Consolidated score ($0.0 - 100.0\%$).
-   - Maturity band (Critical Risk, Active Construction, Advanced Maturity, Operational Excellence).
-   - Immediate bottleneck (first sequential incomplete module).
+   - Consolidated score ($0.0 - 100.0\%$) and Maturity band.
+   - Immediate bottleneck (first sequential incomplete canonical module M01–M10).
+   - FPAI spectral efficiency ($S_{\text{spectral}}$ vs $S_{\text{linear}}$) and token savings.
    - Horizontal Mermaid LR roadmap diagram.
