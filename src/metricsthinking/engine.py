@@ -13,6 +13,7 @@ if str(_PKG_DIR) not in sys.path:
 
 try:
     from metricsthinking.collector import ProjectCollector
+    from metricsthinking.detector import ArchetypeDetector, ArchetypeDetectionResult, probe_archetype
     from metricsthinking.evaluator import CriteriaEvaluator
     from metricsthinking.models import ProjectAuditReport
     from metricsthinking.renderer import ReportRenderer
@@ -20,12 +21,14 @@ try:
 except (ImportError, ValueError):
     try:
         from .collector import ProjectCollector
+        from .detector import ArchetypeDetector, ArchetypeDetectionResult, probe_archetype
         from .evaluator import CriteriaEvaluator
         from .models import ProjectAuditReport
         from .renderer import ReportRenderer
         from .scorer import AuditScorer
     except (ImportError, ValueError):
         from collector import ProjectCollector
+        from detector import ArchetypeDetector, ArchetypeDetectionResult, probe_archetype
         from evaluator import CriteriaEvaluator
         from models import ProjectAuditReport
         from renderer import ReportRenderer
@@ -144,6 +147,17 @@ def resolve_profile_name(hint_or_name: str | None) -> str:
     return clean
 
 
+def probe_project(
+    target_path: str = ".",
+    custom_profiles_dir: Path | None = None
+) -> ArchetypeDetectionResult:
+    """
+    Executes fast, token-economical exploratory probe of target repository.
+    Returns detected archetype, confidence score, detected physical signals, and recommended profile.
+    """
+    return probe_archetype(target_path, custom_profiles_dir=custom_profiles_dir)
+
+
 def run_audit(
     target_path: str = ".",
     profile_name: str = "default",
@@ -159,13 +173,16 @@ def run_audit(
     if not target.exists():
         raise FileNotFoundError(f"Target path '{target}' does not exist.")
 
-    # Find profiles directory: check config/profiles in target or package root
+    # Find profiles directory: check custom profiles in target, config/profiles in target or package root, and global skills
     pkg_dir = Path(__file__).resolve().parent
     repo_root = pkg_dir.parent.parent
+    user_global_profiles = Path.home() / ".gemini" / "config" / "skills" / "metrics" / "profiles"
     profiles_candidates = [
+        target / ".metricsthinking" / "profiles",
         target / "config" / "profiles",
         repo_root / "config" / "profiles",
-        pkg_dir / "profiles"
+        pkg_dir / "profiles",
+        user_global_profiles,
     ]
     profiles_dir = None
     for cand in profiles_candidates:
@@ -180,7 +197,7 @@ def run_audit(
     out_path = target / "artifacts" if not out_dir else Path(out_dir).resolve()
 
     if not quiet:
-        print("[*] Starting MetricsThinking™ Audit v3.0...")
+        print("[*] Starting MetricsThinking™ Audit v4.0...")
         print(f"    - Target:    {target}")
         print(f"    - Profile:   {effective_profile}")
         print(f"    - Output:    {out_path}")
@@ -193,11 +210,19 @@ def run_audit(
         print(f"    - Scanned:   {evidence.total_files} files in repository")
 
     # Auto-detect archetype from seed/evidence if profile is default/auto
-    if (effective_profile in ["default", "auto"]) and evidence.detected_archetype:
-        detected = resolve_profile_name(evidence.detected_archetype)
-        # Verify if profile exists
-        if profiles_dir and (profiles_dir / f"{detected}.yaml").exists():
-            effective_profile = detected
+    if (effective_profile in ["default", "auto"]):
+        if evidence.detected_archetype:
+            detected = resolve_profile_name(evidence.detected_archetype)
+            profile_found = False
+            for cand in profiles_candidates:
+                if cand.exists() and ((cand / f"{detected}.yaml").exists() or (cand / f"{detected}.yml").exists()):
+                    effective_profile = detected
+                    profiles_dir = cand
+                    profile_found = True
+                    break
+            if not profile_found and detected == "custom":
+                effective_profile = "default"
+
             if not quiet:
                 print(f"    - Auto-detected Profile from Repository/Seed: {effective_profile}")
 

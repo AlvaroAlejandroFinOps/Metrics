@@ -12,7 +12,7 @@ When evaluating, auditing, or planning work in this repository or any target rep
    # Run audit on current repository
    metricsthinking audit --target .
 
-# Run with specialized profile (14 archetypes supported)
+   # Run with specialized profile (14 archetypes supported)
    metricsthinking audit --target . --profile agent-skill
    metricsthinking audit --target . --profile data-platform
    metricsthinking audit --target . --profile web-app

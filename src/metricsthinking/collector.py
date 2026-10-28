@@ -18,13 +18,16 @@ if str(_PKG_DIR) not in sys.path:
 try:
     from metricsthinking.models import EvidencePrimitiveSummary
     from metricsthinking.backends import scan_directory, compute_ast_coupling
+    from metricsthinking.detector import ArchetypeDetector, ArchetypeDetectionResult
 except (ImportError, ValueError):
     try:
         from .models import EvidencePrimitiveSummary
         from .backends import scan_directory, compute_ast_coupling
+        from .detector import ArchetypeDetector, ArchetypeDetectionResult
     except (ImportError, ValueError):
         from models import EvidencePrimitiveSummary
         from backends import scan_directory, compute_ast_coupling
+        from detector import ArchetypeDetector, ArchetypeDetectionResult
 
 
 class ProjectEvidence:
@@ -68,6 +71,7 @@ class ProjectEvidence:
         self.evidence_primitives: dict[str, EvidencePrimitiveSummary] = {}
         self.detected_archetype: str | None = None
         self.detected_mode: str | None = None
+        self.archetype_detection: Any = None
         self.seed_detected: bool = False
         self.seed_version: str | None = None
         self.seed_data: dict[str, Any] = {}
@@ -311,21 +315,14 @@ class ProjectCollector:
                             pass
                 break
 
-        # Heuristic Auto-Detection
+        # Multi-Signal Archetype Detection (SDD-aligned & Extensible)
         curr_arch = (self.evidence.detected_archetype or "").lower()
-        if not curr_arch or curr_arch in ["modular-framework", "generic", "software", "unknown"]:
-            if (len(self.evidence.skills) > 0 or
-                ("AGENTS.md" in [f.name for f in self.evidence.files] and len(self.evidence.agent_instructions) > 0) or
-                len(self.evidence.skill_installers) > 0 or
-                any("skill" in s.lower() for s in self.evidence.seeds)):
-                self.evidence.detected_archetype = "agent-skill"
-                self.evidence.detected_mode = "governance_spec"
-            elif any(f.endswith("dbt_project.yml") or "dags/" in f or "airflow" in f for f in self.evidence.rel_files):
-                self.evidence.detected_archetype = "data-platform"
-                self.evidence.detected_mode = "pipeline_orchestration"
-            elif ("package.json" in self.evidence.rel_files and any(f.endswith((".tsx", ".jsx", ".vue", ".svelte")) for f in self.evidence.rel_files)):
-                self.evidence.detected_archetype = "web-app"
-                self.evidence.detected_mode = "source_code"
+        if not curr_arch or curr_arch in ["modular-framework", "generic", "software", "library", "unknown"]:
+            detector = ArchetypeDetector(self.evidence.root_path)
+            res = detector.detect_from_evidence(self.evidence)
+            self.evidence.archetype_detection = res
+            self.evidence.detected_archetype = res.primary_archetype
+            self.evidence.detected_mode = res.inspection_mode
 
     def _classify_universal_primitives(self):
         """Builds universal evidence primitives for polymorphic evaluation."""

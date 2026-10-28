@@ -27,6 +27,16 @@ except (ImportError, ValueError):
 
 TOOLS = [
     {
+        "name": "probe_archetype",
+        "description": "Execute a lightweight, sub-second exploratory probe (Fase 0) to detect project archetype, confidence score, detected architectural signatures, and recommended evaluation profile.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "Target repository path", "default": "."}
+            }
+        }
+    },
+    {
         "name": "audit_project",
         "description": "Execute a full MetricsThinking™ v4.0 Ground Truth forensic audit on a repository, calculating maturity score (0-100%), FPAI spectral vector, security vulnerability report, systems resilience, and generating synchronized artifacts.",
         "inputSchema": {
@@ -131,6 +141,11 @@ def handle_list_tools() -> list[dict[str, Any]]:
 def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[dict[str, Any]]:
     target = arguments.get("target", ".")
     profile = arguments.get("profile", "default")
+
+    if name == "probe_archetype":
+        from .detector import probe_archetype
+        res = probe_archetype(target)
+        return [{"type": "text", "text": json.dumps(res.to_dict(), indent=2, ensure_ascii=False)}]
 
     if name in ["audit_project", "audit_repository"]:
         prune = arguments.get("prune", False)

@@ -24,15 +24,37 @@ Esta habilidad permite al agente actuar como **Lead Systems & AI Architect y Aud
 ### Protocolo de Entrada y Aceptación de Contexto (Natural Language Hints)
 
 El usuario puede invocar `/metrics` de diversas formas:
-1. **Invocación Simple / Auto-detección**: `/metrics` (audita el directorio activo detectando automáticamente el arquetipo a partir de la evidencia física y el seed).
-2. **Invocación con Ruta**: `/metrics "./otro_proyecto"` (audita una ruta específica con auto-detección).
+1. **Invocación Simple / Auto-detección**: `/metrics` (activa la **Fase 0: Sonda Exploratoria Ligera** para diagnosticar el arquetipo antes de auditar).
+2. **Invocación con Ruta**: `/metrics "./otro_proyecto"` (ejecuta sonda exploratoria sobre la ruta destino).
 3. **Invocación con Contexto o Pista en Lenguaje Natural**:
    - `/metrics (evalua este proyecto como una skill para IA)`
    - `/metrics evalua como data-platform`
    - `/metrics para un proyecto de web-app`
+   - `/metrics como sdd / spec-driven`
 4. **Invocación Explícita por CLI**:
    ```bash
-   python -m metricsthinking.cli audit --target . --profile agent-skill --prune --medallion
+   python -m metricsthinking.cli audit --target . --profile sdd --prune --medallion
+   ```
+
+---
+
+### Fase 0: Sonda Exploratoria Ligera y Diagnóstico de Arquetipos (SDD & Token Economy)
+
+Antes de ejecutar la auditoría forense pesada (a menos que el usuario haya fijado explícitamente el perfil):
+1. **Ejecutar la Sonda Ligera**:
+   ```bash
+   python -m metricsthinking.cli probe --target . --json
+   ```
+   *(O invocar la herramienta MCP `probe_archetype`)*.
+2. **Interpretación y Rigor SDD**:
+   - La sonda inspecciona en < 100 ms los contratos, manifiestos y estructura troncal sin volcar archivos en el contexto del LLM.
+   - Si la confianza es alta ($\ge 65\%$), se selecciona automáticamente el perfil recomendado (`recommended_profile`).
+   - Si se detecta un **Dominio Emergente** (confianza $< 65\%$ en todos los perfiles de catálogo), se evalúa con el metamodelo universal (`default`) o se sintetiza un perfil ad-hoc en `.metricsthinking/profiles/custom.yaml`.
+   - La presencia de archivos de gobierno de asistentes (`AGENTS.md`, `.cursorrules`) **no** sesga el proyecto a `agent-skill` a menos que el núcleo troncal sea genuinamente una habilidad para agentes.
+3. **Ejecución Determinística**:
+   Disparar la auditoría con el perfil resuelto:
+   ```bash
+   python -m metricsthinking.cli audit --target . --profile <PERFIL_RESUELTO>
    ```
 
 > 💡 **Acuse de Recibo Inicial**: Al comenzar la respuesta de auditoría, emite un breve bloque introductorio confirmando el proyecto analizado y el perfil resuelto:
@@ -40,6 +62,7 @@ El usuario puede invocar `/metrics` de diversas formas:
 > > 🔍 **MetricsThinking™ v4.0 | Auditoría Forense Holística**
 > > - **Proyecto Auditado:** `<NOMBRE_PROYECTO>` (`<RUTA>`)
 > > - **Perfil / Arquetipo:** `<PERFIL>` (*<DESCRIPCIÓN_CORTA>*)
+> > - **Confianza Sonda (Fase 0):** `<CONFIANZA_PCT>` (*<JUSTIFICACIÓN_EVIDENCIA>*)
 > > - **Modo de Inspección:** `<INSPECTION_MODE>`
 > > - **Backend Activo:** `<RUST_NATIVE | PYTHON_FALLBACK>`
 > ```

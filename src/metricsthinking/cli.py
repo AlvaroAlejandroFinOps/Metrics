@@ -123,6 +123,11 @@ def main():
     # 6. list-profiles subcommand
     subparsers.add_parser("list-profiles", help="List all available evaluation profiles and archetypes")
 
+    # 7. probe subcommand (Pre-Flight Exploratory Analysis)
+    probe_parser = subparsers.add_parser("probe", help="Run lightweight exploratory probe to detect project archetype and optimal profile")
+    probe_parser.add_argument("--target", "-t", default=".", help="Path to project repository")
+    probe_parser.add_argument("--json", action="store_true", help="Output result as JSON for agent/tool consumption")
+
     # Default fallback options on root parser for backwards compatibility
     parser.add_argument("--target", "-t", default=".", help="Path to project repository to audit")
     parser.add_argument("--profile", "-p", default="default", help="Profile name")
@@ -131,6 +136,7 @@ def main():
     parser.add_argument("--prefix", default="MetricsThinking", help="Filename prefix for generated artifacts")
     parser.add_argument("--quiet", "-q", action="store_true", help="Suppress console summary table")
     parser.add_argument("--list-profiles", action="store_true", help="List all available profiles and exit")
+    parser.add_argument("--probe", action="store_true", help="Run exploratory probe and exit")
 
     args = parser.parse_args()
 
@@ -193,6 +199,38 @@ def main():
             print(f"    - Silver records total: {res['silver_records_total']}")
             print(f"    - Duplicates dropped: {res['duplicates_dropped']}")
             print(f"    - Average FPAI Spectral: {res['gold_kpis'].get('average_fpai_spectral', 1.0):.4f}")
+
+        elif args.command == "probe" or getattr(args, "probe", False):
+            from .detector import probe_archetype
+            res = probe_archetype(args.target)
+            if getattr(args, "json", False):
+                import json
+                print(json.dumps(res.to_dict(), indent=2, ensure_ascii=False))
+            else:
+                print("\n" + "=" * 75)
+                print("  METRICSTHINKING™ PRE-FLIGHT ARCHETYPE PROBE (FASE 0)")
+                print("=" * 75)
+                print(f"  • Primary Archetype:     {res.primary_archetype.upper()}")
+                print(f"  • Confidence:            {res.confidence * 100:.1f}%")
+                print(f"  • Recommended Profile:   {res.recommended_profile}")
+                print(f"  • Inspection Mode:       {res.inspection_mode}")
+                if res.is_custom:
+                    print("  • Profile Source:        Custom (.metricsthinking / local)")
+                if res.is_emerging_domain:
+                    print("  • Domain Classification: Emerging / Uncataloged (Adaptive Metamodel applied)")
+                print(f"  • Rationale:             {res.rationale}")
+                print("-" * 75)
+                print("  Physical Signals Detected:")
+                for sig in res.detected_signals:
+                    print(f"    - {sig}")
+                if res.runner_up_archetypes:
+                    print("-" * 75)
+                    print("  Alternative Candidates:")
+                    for arch, conf in res.runner_up_archetypes:
+                        print(f"    - {arch:<22} ({conf * 100:.1f}%)")
+                print("=" * 75)
+                print(f"  Recommended Command: python -m metricsthinking.cli audit --target \"{args.target}\" --profile {res.recommended_profile}")
+                print("=" * 75 + "\n")
 
         else:
             # Default to audit

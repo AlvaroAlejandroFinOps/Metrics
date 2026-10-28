@@ -53,9 +53,7 @@ def install_antigravity(dest_root: Path, is_global: bool = False, dry_run: bool 
             src_pkg = REPO_ROOT / "src" / "metricsthinking"
             if src_pkg.exists():
                 pkg_dest = scripts_dest / "metricsthinking"
-                if pkg_dest.exists():
-                    shutil.rmtree(pkg_dest)
-                shutil.copytree(src_pkg, pkg_dest)
+                shutil.copytree(src_pkg, pkg_dest, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
                 created.append(pkg_dest)
                 for py_file in src_pkg.glob("*.py"):
                     shutil.copy2(py_file, scripts_dest / py_file.name)
