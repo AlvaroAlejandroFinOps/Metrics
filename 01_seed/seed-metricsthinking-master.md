@@ -8,6 +8,7 @@
 > 3. **Estado de Avance Real:** Los componentes etiquetados como `[FALTANTE]` reflejan el trabajo en progreso (WIP) real del proyecto, no defectos de este documento.
 
 ## Seed Changelog
+- `2026-10-27`: [CONFIRMADO] Integración de detector heurístico de arquetipos (`detector.py` con 14 arquetipos ponderados), script ejecutor de benchmarks (`scripts/run_benchmark.py`), banner corporativo `MetricsThinking.jpg`, expansión de suite a 105 tests pasando al 100% y estandarización dual Paper-Grade en `README.md` y `README_ES.md`.
 - `2026-10-21`: [CONFIRMADO] Emisión de ThinkingSeed Master v3.0 para MetricsThinking™ v4.0 Holistic Governance. Incorpora arquitectura híbrida Rust/Python (`crates/metricsthinking_rs` + `src/metricsthinking/backends/`), motor espectral de eficiencia contextual FPIA (8 submódulos en `src/metricsthinking/fpai/`), firewall Zero-Tolerance (Shannon $H \le 4.5$, PII, Prompt Injection), vector de resiliencia AST ($C_a/C_e$, SPOFs), servidor MCP stdio con 6 herramientas, materialización de 4 artefactos sincronizados y suite de 94 pruebas Pytest pasando al 100%.
 - `2026-10-21`: [CONFIRMADO] Actualización mayor a ThinkingSeed Master v3.0. Estandarización de 14 perfiles canónicos YAML, soporte nativo de primitivas universales de evidencia (`EvidencePrimitiveSummary`), integración de servidor MCP stdio JSON-RPC (`mcp_server.py`), instalador multi-asistente portable (`scripts/install_skill.py`) y sincronización de contratos con `schemas/thinking_seed_v3.schema.json`.
 - `2026-09-20`: [CONFIRMADO] Emisión inicial v2.0 del motor monolítico de auditoría estática con 10 módulos canónicos y reporteador Mermaid LR.
@@ -21,11 +22,11 @@ project_name: "MetricsThinking"
 repository_name: "MetricsThinking"
 project_type: "library"
 repository_mode: "single-project"
-generated_at: "2026-10-21T16:48:00-03:00"
+generated_at: "2026-10-27T22:05:00-03:00"
 generated_by: "Antigravity UltraThinking Agent"
 repository_root: "./"
 git_branch: "master"
-git_commit: "1ce94d4"
+git_commit: "8fd8cca"
 working_tree_state: "dirty"
 analysis_mode: "static+git+validated"
 coverage_level: "high"
@@ -130,7 +131,8 @@ known_analysis_limits:
 ├── scripts/                       # Automatización y scripts de mantenimiento
 │   ├── .context.yaml
 │   ├── hnsw_index_rebuild.py
-│   └── install_skill.py
+│   ├── install_skill.py
+│   └── run_benchmark.py           # Runner determinista de benchmarks volumétricos
 ├── src/                           # Código fuente del motor
 │   ├── __init__.py
 │   └── metricsthinking/           # Paquete Python distribuible
@@ -150,16 +152,18 @@ known_analysis_limits:
 │       │   └── spectral_engine.py
 │       ├── cli.py
 │       ├── collector.py
+│       ├── detector.py            # Detector heurístico y bayesiano de arquetipos
 │       ├── engine.py
 │       ├── evaluator.py
 │       ├── mcp_server.py
 │       ├── models.py
 │       ├── renderer.py
 │       └── scorer.py
-├── tests/                         # Suite de pruebas Pytest (94 tests passing)
+├── tests/                         # Suite de pruebas Pytest (105 tests passing)
 │   ├── fixtures/
 │   │   ├── golden_baseline_report.json
 │   │   └── sample_golden_audit.json
+│   ├── test_archetype_detector.py
 │   ├── test_backends_collector_v4.py
 │   ├── test_benchmarks_stress.py
 │   ├── test_calibration.py
@@ -188,6 +192,7 @@ known_analysis_limits:
 - **2.3 Responsabilidad por directorio y archivo clave:**
   - `./src/metricsthinking/models.py`: [CONFIRMADO] Modelos de datos Pydantic v2 inmutables (`DomainArchetype`, `ModuleStatus`, `AuditCriterion`, `CanonicalModuleEvaluation`, `FPAISpectralVector`, `SecurityVulnerabilityReport`, `SystemsResilienceReport`, `PruningActionItem`, `ContextPruningPlan`, `ProjectAuditReport`).
   - `./src/metricsthinking/collector.py`: [CONFIRMADO] Escaneo estático profundo con backend unificado (Rust/Python), caché incremental SHA-256 y cómputo de métricas AST y resiliencia.
+  - `./src/metricsthinking/detector.py`: [CONFIRMADO] Detector heurístico y bayesiano de arquetipos de ingeniería con ponderación de señales físicas y multi-modalidad.
   - `./src/metricsthinking/backends/`: [CONFIRMADO] Abstracción modular de indexación y escaneo de disco con selección dinámica de acelerador Rust o fallback Python puro.
   - `./src/metricsthinking/fpai/`: [CONFIRMADO] Motor de Inteligencia y Gobernanza Contextual FPIA: espectro $S_{\text{spectral}}$, firewall Zero-Tolerance, ablación, atribución, auditoría de deriva y compensación.
   - `./src/metricsthinking/evaluator.py`: [CONFIRMADO] Despachador de reglas de evaluación (`CriteriaEvaluator`) con más de 95 métodos de verificación especializada (`check_*`).
@@ -196,7 +201,7 @@ known_analysis_limits:
   - `./src/metricsthinking/engine.py`: [CONFIRMADO] Orquestador central de ejecución (`run_audit`) y resolución semántica de perfiles (`resolve_profile_name`).
   - `./src/metricsthinking/cli.py`: [CONFIRMADO] Interfaz CLI (`argparse`) con subcomandos `audit`, `install-skill`, `mcp` y `list-profiles`.
   - `./src/metricsthinking/mcp_server.py`: [CONFIRMADO] Servidor Model Context Protocol stdio JSON-RPC con 6 herramientas operacionales.
-  - `./scripts/install_skill.py`: [CONFIRMADO] Script instalador multi-asistente (Antigravity, Claude, Cursor, Copilot, MCP).
+  - `./scripts/install_skill.py`: [CONFIRMADO] Script instalador multi-asistente (Google Antigravity, OpenAI Codex, Claude Code, Cursor, Copilot, MCP).
 - **2.4 Matriz topológica y prioridades de Context Engineering (según `.context/tree.json`):**
   - `p0 (Crítico / ADN)`: `./01_seed/`, `./.context/`, `./artifacts/plans/`.
   - `p1 (Core & Especificación)`: `./02_foundation/engine/`, `./src/metricsthinking/`, `./config/`, `./schemas/`, `./tests/`, `./docs/`, `./integrations/`, `./crates/`.
@@ -327,6 +332,14 @@ src/metricsthinking/renderer.py::ReportRenderer._render_spectral_context_efficie
 src/metricsthinking/renderer.py::ReportRenderer._render_security_and_attack_surface() -> str | Renderiza bloque forense de seguridad y superficie de ataque
 src/metricsthinking/renderer.py::ReportRenderer._render_systems_modularity_and_resilience() -> str | Renderiza bloque de resiliencia y acoplamiento AST
 
+# --- src/metricsthinking/detector.py ---
+src/metricsthinking/detector.py::ArchetypeScore(BaseModel) -> Model | Puntuación normalizada de arquetipo por señales físicas (archetype, raw_score, normalized_score, matched_signals)
+src/metricsthinking/detector.py::ArchetypeDetectionResult(BaseModel) -> Model | Resultado consolidado de detección bayesiana (primary_archetype, confidence, scores, detected_modes)
+src/metricsthinking/detector.py::ArchetypeDetector(class) -> Object | Motor de inferencia y resolución bayesiana de arquetipos basado en 14 perfiles y señales de evidencia
+src/metricsthinking/detector.py::ArchetypeDetector.detect_from_evidence(ev: ProjectEvidence) -> ArchetypeDetectionResult | Clasificación de arquetipo basada en evidencia física recolectada
+src/metricsthinking/detector.py::ArchetypeDetector.detect_from_filesystem(target_path: str) -> ArchetypeDetectionResult | Clasificación estática autónoma directa del sistema de archivos
+src/metricsthinking/detector.py::probe_archetype(target_path: str = ".") -> str | Resolución rápida de arquetipo primario para enrutamiento de auditoría
+
 # --- src/metricsthinking/engine.py ---
 src/metricsthinking/engine.py::resolve_profile_name(hint_or_name: str | None) -> str | Normaliza alias, nombres de perfiles y lenguaje natural
 src/metricsthinking/engine.py::run_audit(target_path: str = ".", profile_name: str = "default", archetype: str | None = None, out_dir: str | None = None, prefix: str = "MetricsThinking", quiet: bool = False, prune: bool = False, medallion: bool = False) -> tuple[ProjectAuditReport, dict[str, Path]] | Orquesta el pipeline completo de 5 fases y persistencia de 4 artefactos
@@ -340,10 +353,12 @@ src/metricsthinking/mcp_server.py::handle_list_tools() -> list[dict[str, Any]] |
 src/metricsthinking/mcp_server.py::handle_call_tool(name: str, arguments: dict[str, Any]) -> list[dict[str, Any]] | Ejecuta herramienta solicitada por cliente MCP
 src/metricsthinking/mcp_server.py::run_mcp_server() -> None | Loop interactivo stdio para protocolo JSON-RPC 2.0
 
-# --- scripts/install_skill.py & hnsw_index_rebuild.py ---
+# --- scripts/install_skill.py, hnsw_index_rebuild.py & run_benchmark.py ---
 scripts/hnsw_index_rebuild.py::rebuild_hnsw_index(root_path: str, index_output: str) -> None | Reconstruye índice vectorial HNSW para búsqueda semántica
+scripts/run_benchmark.py::main() -> None | Runner determinista de benchmarks volumétricos y generación de telemetría de cobertura
 scripts/install_skill.py::get_user_home() -> Path | Retorna directorio home de usuario de manera multiplataforma
 scripts/install_skill.py::install_antigravity(dest_root: Path, is_global: bool = False, dry_run: bool = False) -> list[Path] | Despliega skill de Google Antigravity en .agents/ o global
+scripts/install_skill.py::install_codex(dest_root: Path, is_global: bool = False, dry_run: bool = False) -> list[Path] | Despliega skill de OpenAI Codex en .codex/ o global
 scripts/install_skill.py::install_claude(dest_root: Path, dry_run: bool = False) -> list[Path] | Copia CLAUDE.md en raíz de destino
 scripts/install_skill.py::install_cursor(dest_root: Path, dry_run: bool = False) -> list[Path] | Despliega .cursor/rules/metrics.mdc
 scripts/install_skill.py::install_copilot(dest_root: Path, dry_run: bool = False) -> list[Path] | Despliega .github/copilot-instructions.md
@@ -402,9 +417,9 @@ scripts/install_skill.py::run_installer(target: str = "all", dest: str = ".", is
 
 ## 6. PRUEBAS, CI/CD, DESPLIEGUE Y OPERACIÓN
 - **6.1 Estrategia de pruebas:**
-  - Suite de Pytest completa con 94 pruebas unitarias, de integración y stress en `./tests/`, cubriendo calibración de scoring, CLI, colector, evaluador, instalador, renderizador, scorer, backends v4, motor espectral FPIA, firewall de seguridad, resiliencia y los 14 arquetipos v3.0.
+  - Suite de Pytest completa con 105 pruebas unitarias, de integración, stress y detección bayesiana en `./tests/`, cubriendo calibración de scoring, CLI, colector, evaluador, detector de arquetipos, instalador, renderizador, scorer, backends v4, motor espectral FPIA, firewall de seguridad, resiliencia y los 14 arquetipos v3.0.
   - Pruebas de regresión determinista (*Golden Regression Tests*) validadas contra `./tests/fixtures/sample_golden_audit.json` y `./tests/fixtures/golden_baseline_report.json`.
-  - Ejecución de pruebas: `python -m pytest` (100% pruebas pasando, 94/94 passed, 0 fallos).
+  - Ejecución de pruebas: `python -m pytest` (100% pruebas pasando, 105/105 passed, 0 fallos).
 - **6.2 Pipeline CI/CD (`.github/workflows/ci.yml`):**
   - Ejecución automatizada en GitHub Actions en branches `main` y `master`.
   - Matriz de pruebas sobre Python 3.10, 3.11 y 3.12.
@@ -495,6 +510,7 @@ scripts/install_skill.py::run_installer(target: str = "all", dest: str = ".", is
 | `./pyproject.toml` | Manifiesto de empaquetado y dependencias PEP 621 | [CONFIRMADO] v4.0.0 |
 | `./src/metricsthinking/models.py` | Modelos Pydantic v2 inmutables | [CONFIRMADO] 187 líneas |
 | `./src/metricsthinking/collector.py` | Colector estático con backend híbrido | [CONFIRMADO] 263 líneas |
+| `./src/metricsthinking/detector.py` | Detector bayesiano de arquetipos | [CONFIRMADO] 441 líneas |
 | `./src/metricsthinking/backends/__init__.py` | Despachador de backends (Rust/Python) | [CONFIRMADO] 82 líneas |
 | `./src/metricsthinking/backends/python_fallback.py` | Crawling determinista con caché SHA-256 | [CONFIRMADO] 184 líneas |
 | `./src/metricsthinking/fpai/spectral_engine.py` | Motor espectral de contexto FPIA | [CONFIRMADO] 142 líneas |
@@ -508,7 +524,8 @@ scripts/install_skill.py::run_installer(target: str = "all", dest: str = ".", is
 | `./crates/metricsthinking_rs/` | Acelerador nativo en Rust (PyO3) | [CONFIRMADO] 5 módulos .rs |
 | `./config/profiles/` | 14 perfiles canónicos YAML | [CONFIRMADO] 14 archivos |
 | `./schemas/` | Contratos JSON Schema formales | [CONFIRMADO] 7 esquemas |
-| `./tests/` | Suite Pytest unitaria, integración y stress | [CONFIRMADO] 94/94 passed |
+| `./scripts/run_benchmark.py` | Suite automatizada de benchmarks volumétricos | [CONFIRMADO] 208 líneas |
+| `./tests/` | Suite Pytest unitaria, integración y stress | [CONFIRMADO] 105/105 passed |
 | `./.agents/skills/metrics/SKILL.md` | Skill para Google Antigravity | [CONFIRMADO] Operacional |
 
 ---

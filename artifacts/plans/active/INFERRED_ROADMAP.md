@@ -4,7 +4,7 @@
 > **Arquetipo de Dominio:** `software-engineering` | **Modo:** `source_code`  
 > **Estado Consolidado:** `100.0% / 100.0%` — **Excelencia Operativa / Producción (90.0% - 100.0%)**  
 > **Cuello de Botella Activo:** `Ninguno. Todos los módulos canónicos se encuentran al 100%.`  
-> **Fecha de Emisión:** `2026-10-27 21:56:27`  
+> **Fecha de Emisión:** `2026-10-27 22:35:30`  
 
 Este documento representa el **Roadmap Operacional y de Ejecución Técnica** derivado por ingeniería inversa a partir de la evidencia física (Ground Truth) del repositorio. Sirve como guía de trabajo para el equipo de arquitectura y desarrollo.
 
@@ -43,7 +43,7 @@ Este documento representa el **Roadmap Operacional y de Ejecución Técnica** de
 ### Checklists de Implementación
 - [x] **Detección y Marcado de PII** (`M03-C01`): Políticas de privacidad y clasificación PII documentadas en '01_seed/seed-metricsthinking-master.md'. *(Evidencia: `01_seed/seed-metricsthinking-master.md`)*
 - [x] **Reglas de Calidad Formales (cQS)** (`M03-C02`): Catálogo de criterios y reglas formales de calidad especificados en 'artifacts/MetricsThinking.md'. *(Evidencia: `artifacts/MetricsThinking.md`)*
-- [x] **Validación Estricta de Esquemas / Context** (`M03-C03`): Gobernanza contextual iDirectory activa con 22 archivos de contexto (.context.yaml). *(Evidencia: `.context/tree.json`)*
+- [x] **Validación Estricta de Esquemas / Context** (`M03-C03`): Gobernanza contextual iDirectory activa con 17 archivos de contexto (.context.yaml). *(Evidencia: `.context/tree.json`)*
 
 ### Entregables Tangibles Esperados
 - ✅ Todos los artefactos y contratos físicos de **M03** han sido verificados satisfactoriamente en disco.
@@ -56,7 +56,7 @@ Este documento representa el **Roadmap Operacional y de Ejecución Técnica** de
 ### Checklists de Implementación
 - [x] **Entorno Reproducible** (`M04-C01`): Manifiesto de empaquetado y entorno reproducible verificado en 'pyproject.toml'. *(Evidencia: `pyproject.toml`)*
 - [x] **Dependencias Versionadas** (`M04-C02`): Especificación estricta de versiones de dependencias verificada en 'pyproject.toml'. *(Evidencia: `pyproject.toml`)*
-- [x] **Fixture Enterprise Disponible** (`M04-C03`): Fixtures y datos de prueba disponibles (3 archivos, e.g. 'src/data_generation/.context.yaml'). *(Evidencia: `src/data_generation/.context.yaml`)*
+- [x] **Fixture Enterprise Disponible** (`M04-C03`): Fixtures y datos de prueba disponibles (2 archivos, e.g. 'tests/fixtures/golden_baseline_report.json'). *(Evidencia: `tests/fixtures/golden_baseline_report.json`)*
 
 ### Entregables Tangibles Esperados
 - ✅ Todos los artefactos y contratos físicos de **M04** han sido verificados satisfactoriamente en disco.
@@ -139,7 +139,7 @@ Este documento representa el **Roadmap Operacional y de Ejecución Técnica** de
 - [x] **Documentación Técnica Exhaustiva (Seed)** (`M10-C01`): Memoria técnica formal (ThinkingSeed) identificada en '01_seed/seed-metricsthinking-master.md'. *(Evidencia: `01_seed/seed-metricsthinking-master.md`)*
 - [x] **CLI Help Documentado** (`M10-C02`): Instrucciones operativas y ayuda de comandos documentadas en '.agents/skills/metrics/SKILL.md'. *(Evidencia: `.agents/skills/metrics/SKILL.md`)*
 - [x] **Adaptadores Multicanal / Roadmap** (`M10-C03`): Roadmap formal de extensibilidad y capacidades futuras documentado en '01_seed/seed-metricsthinking-master.md'. *(Evidencia: `01_seed/seed-metricsthinking-master.md`)*
-- [x] **Eficiencia Contextual Espectral FPAI** (`M10-C04`): Eficiencia espectral FPAI verificada: PF_spectral=0.999 >= 0.70 (S_spectral=863785, S_linear=897983). *(Evidencia: `config/fpai_governance.yaml`)*
+- [x] **Eficiencia Contextual Espectral FPAI** (`M10-C04`): Eficiencia espectral FPAI verificada: PF_spectral=0.999 >= 0.70 (S_spectral=867174, S_linear=901475). *(Evidencia: `config/fpai_governance.yaml`)*
 
 ### Entregables Tangibles Esperados
 - ✅ Todos los artefactos y contratos físicos de **M10** han sido verificados satisfactoriamente en disco.

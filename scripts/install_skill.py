@@ -49,6 +49,65 @@ def install_antigravity(dest_root: Path, is_global: bool = False, dry_run: bool 
         # Copy scripts and packages if global install
         if is_global:
             scripts_dest = target_skill_dir / "scripts"
+            # Purge stale pycache if present
+            for pycache_dir in scripts_dest.rglob("__pycache__"):
+                if pycache_dir.is_dir():
+                    shutil.rmtree(pycache_dir, ignore_errors=True)
+            scripts_dest.mkdir(parents=True, exist_ok=True)
+            src_pkg = REPO_ROOT / "src" / "metricsthinking"
+            if src_pkg.exists():
+                pkg_dest = scripts_dest / "metricsthinking"
+                shutil.copytree(src_pkg, pkg_dest, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+                created.append(pkg_dest)
+                for py_file in src_pkg.glob("*.py"):
+                    shutil.copy2(py_file, scripts_dest / py_file.name)
+                    created.append(scripts_dest / py_file.name)
+            
+            profiles_dest = target_skill_dir / "profiles"
+            profiles_dest.mkdir(parents=True, exist_ok=True)
+            for yaml_file in (REPO_ROOT / "config" / "profiles").glob("*.yaml"):
+                shutil.copy2(yaml_file, profiles_dest / yaml_file.name)
+                created.append(profiles_dest / yaml_file.name)
+
+            gov_yaml = REPO_ROOT / "config" / "fpai_governance.yaml"
+            if gov_yaml.exists():
+                gov_dest = target_skill_dir / "fpai_governance.yaml"
+                shutil.copy2(gov_yaml, gov_dest)
+                created.append(gov_dest)
+    else:
+        created.append(target_skill_dir / "SKILL.md")
+
+    return created
+
+
+def install_codex(dest_root: Path, is_global: bool = False, dry_run: bool = False) -> list[Path]:
+    created = []
+    if is_global:
+        target_skill_dir = get_user_home() / ".codex" / "skills" / "metrics"
+    else:
+        target_skill_dir = dest_root / ".codex" / "skills" / "metrics"
+
+    print(f"[*] Installing OpenAI Codex Skill -> {target_skill_dir}")
+
+    src_skill_md = REPO_ROOT / ".agents" / "skills" / "metrics" / "SKILL.md"
+    if not src_skill_md.exists():
+        src_skill_md = REPO_ROOT / "config" / "SKILL.md"
+
+    if not dry_run:
+        target_skill_dir.mkdir(parents=True, exist_ok=True)
+        target_file = target_skill_dir / "SKILL.md"
+        if src_skill_md.exists():
+            if src_skill_md.resolve() != target_file.resolve():
+                shutil.copy2(src_skill_md, target_file)
+            created.append(target_file)
+
+        # Copy scripts, profiles and packages if global install
+        if is_global:
+            scripts_dest = target_skill_dir / "scripts"
+            # Purge stale pycache if present
+            for pycache_dir in scripts_dest.rglob("__pycache__"):
+                if pycache_dir.is_dir():
+                    shutil.rmtree(pycache_dir, ignore_errors=True)
             scripts_dest.mkdir(parents=True, exist_ok=True)
             src_pkg = REPO_ROOT / "src" / "metricsthinking"
             if src_pkg.exists():
@@ -158,6 +217,9 @@ def run_installer(target: str = "all", dest: str = ".", is_global: bool = False,
     if target in ("all", "antigravity"):
         installed.extend(install_antigravity(dest_path, is_global=is_global, dry_run=dry_run))
 
+    if target in ("all", "codex"):
+        installed.extend(install_codex(dest_path, is_global=is_global, dry_run=dry_run))
+
     if target in ("all", "claude"):
         installed.extend(install_claude(dest_path, dry_run=dry_run))
 
@@ -183,7 +245,7 @@ def main():
     )
     parser.add_argument(
         "--target", "-t",
-        choices=["all", "antigravity", "claude", "cursor", "copilot", "mcp"],
+        choices=["all", "antigravity", "codex", "claude", "cursor", "copilot", "mcp"],
         default="all",
         help="Target AI provider to install skill for (default: all)"
     )

@@ -1,6 +1,6 @@
 {
-  "total_files": 145,
-  "detected_archetype": "library",
+  "total_files": 143,
+  "detected_archetype": "software-engineering",
   "is_git": true,
   "has_seeds": true,
   "has_schemas": true

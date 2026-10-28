@@ -81,7 +81,7 @@ def main():
     install_parser = subparsers.add_parser("install-skill", help="Install MetricsThinking™ skill for AI assistants")
     install_parser.add_argument(
         "--target", "-t",
-        choices=["all", "antigravity", "claude", "cursor", "copilot", "mcp"],
+        choices=["all", "antigravity", "codex", "claude", "cursor", "copilot", "mcp"],
         default="all",
         help="Target AI assistant / platform (default: all)"
     )

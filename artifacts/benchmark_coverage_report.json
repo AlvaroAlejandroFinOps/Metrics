@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-10-28T00:33:33.489811+00:00",
+  "timestamp": "2026-10-28T01:35:04.488603+00:00",
   "backend": "PYTHON_FALLBACK",
   "total_files_benchmarked": 1000,
-  "cold_start_scan_seconds": 2.5832,
-  "cached_scan_seconds": 2.0974,
+  "cold_start_scan_seconds": 2.5396,
+  "cached_scan_seconds": 2.0584,
   "speedup_factor": 1.23,
-  "throughput_files_per_sec": 387.1,
+  "throughput_files_per_sec": 393.8,
   "status": "PASS"
 }

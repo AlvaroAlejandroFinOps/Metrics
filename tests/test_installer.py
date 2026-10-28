@@ -2,7 +2,15 @@
 import json
 from pathlib import Path
 
-from scripts.install_skill import install_antigravity, install_claude, install_cursor, install_copilot, install_mcp_config, run_installer
+from scripts.install_skill import (
+    install_antigravity,
+    install_codex,
+    install_claude,
+    install_cursor,
+    install_copilot,
+    install_mcp_config,
+    run_installer,
+)
 from metricsthinking.mcp_server import handle_list_tools, handle_call_tool
 
 
@@ -10,6 +18,12 @@ def test_install_antigravity_local(tmp_path: Path):
     created = install_antigravity(dest_root=tmp_path, is_global=False, dry_run=False)
     assert len(created) > 0
     assert (tmp_path / ".agents" / "skills" / "metrics" / "SKILL.md").exists()
+
+
+def test_install_codex_local(tmp_path: Path):
+    created = install_codex(dest_root=tmp_path, is_global=False, dry_run=False)
+    assert len(created) > 0
+    assert (tmp_path / ".codex" / "skills" / "metrics" / "SKILL.md").exists()
 
 
 def test_install_claude(tmp_path: Path):
@@ -42,6 +56,7 @@ def test_install_mcp_config(tmp_path: Path):
 def test_run_installer_all(tmp_path: Path):
     run_installer(target="all", dest=str(tmp_path), dry_run=False)
     assert (tmp_path / ".agents" / "skills" / "metrics" / "SKILL.md").exists()
+    assert (tmp_path / ".codex" / "skills" / "metrics" / "SKILL.md").exists()
     assert (tmp_path / "CLAUDE.md").exists()
     assert (tmp_path / ".cursor" / "rules" / "metrics.mdc").exists()
     assert (tmp_path / ".github" / "copilot-instructions.md").exists()
