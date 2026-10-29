@@ -2,7 +2,7 @@
   "$schema": "../schemas/icontext_bus.schema.json",
   "protocol_version": "5.0.0",
   "project": "MetricsThinking",
-  "updated_at": "2026-10-29T01:57:55.183481+00:00",
+  "updated_at": "2026-10-29T02:16:11.838629+00:00",
   "layers": {
     "l0_idirectory": {
       "version": "5.0.0",
@@ -10,7 +10,7 @@
       "contracts_ast_hash": "58696855c96ac76bf494921feb25456d456b0b78ee4818f96b172b7495ce9013",
       "active_nodes_count": 16,
       "pruned_nodes_count": 8,
-      "active_tokens_estimate": 272211,
+      "active_tokens_estimate": 272196,
       "fpai_pruned_paths_count": 3
     },
     "l1_thinkingseed": {
@@ -23,16 +23,16 @@
       "gates_passed": "pending"
     },
     "l2_metricsthinking": {
-      "present": true,
-      "version": "5.0.0",
-      "report_path": "artifacts/plans/metricsthinking/MetricsThinking.json",
       "consolidated_score": 100.0,
       "maturity_band": "Excelencia Operativa / Producción (90.0% - 100.0%)",
       "active_bottleneck": "Ninguno. Todos los módulos canónicos se encuentran al 100%.",
-      "fpai_pf_spectral": 1.0,
-      "fpai_s_spectral": 0.0,
-      "security_gate": 1.0,
-      "synced_with_seed_hash": "d14d5b09b7aed3c6d961f728b5b9037ff765944d9455340486b66d7d13497750"
+      "fpai_power_factor_spectral": 0.9992,
+      "p_active_tokens": 929666.0,
+      "q_dead_tokens": 7964.0,
+      "q_dup_tokens": 28998.0,
+      "d_structural_tokens": 0.0,
+      "attack_surface_index": 10.0,
+      "last_audited_at": "2026-10-28 23:15:59"
     },
     "l3_ireadme": {
       "present": true,
@@ -42,5 +42,13 @@
       "path_leakage_rate": 0.0,
       "synced_with_topology_hash": "916db87d0aabfedd169f2d4f73df058bed5572c3df73c07f72a4a81d6c5d7615"
     }
+  },
+  "l1_thinkingseed": {
+    "seed_path": "./01_seed/seed-metricsthinking-master.md",
+    "seed_version": "5.0",
+    "ast_coverage_pct": 100.0,
+    "untracked_Public_symbols": [],
+    "freshness_status": "SYNCED",
+    "last_validated_at": "2026-10-29T02:16:11.838629+00:00"
   }
 }

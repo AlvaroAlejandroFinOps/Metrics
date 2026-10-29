@@ -14,7 +14,7 @@
 | **Volumen de Archivos** | **185 archivos** | 0 archivo Markdown | 1 archivo Markdown |
 | **Líneas de Código / Texto** | **31,437 líneas** | 0 líneas | 558 líneas |
 | **Peso Físico** | **3.73 MB** | 0.0 KB | 54.6 KB |
-| **Tokens Estimados** | **~977,466 tokens** | **~0 tokens** | **~7,805 tokens** |
+| **Tokens Estimados** | **~977,451 tokens** | **~0 tokens** | **~7,805 tokens** |
 | **Ahorro de Contexto (Tokens)** | 0% (Base) | **0.00% de ahorro** | **99.20% de ahorro** |
 | **Factor de Compresión** | 1x | **N/A** | **125x más ligero** |
 | **ÍNDICE DE COBERTURA DE ADN** | 100% (Código crudo) | **0.0% (ADN Esencial)** | **93.4% (ADN Exhaustivo)** |
