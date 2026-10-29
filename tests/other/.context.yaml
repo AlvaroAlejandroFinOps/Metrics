@@ -1,0 +1,12 @@
+version: 1.0
+directory: tests/other
+role: test_suites
+purpose: Subdominio other bajo tests/.
+relevance: high
+crawl: true
+read_priority: p1
+seed_reference: optional
+tier1_preload: false
+inherited: true
+token_density: sparse
+instructions: Hereda directivas de tests/.

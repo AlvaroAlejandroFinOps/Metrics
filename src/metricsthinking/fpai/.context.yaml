@@ -1,0 +1,12 @@
+version: 1.0
+directory: src/metricsthinking/fpai
+role: namespace
+purpose: Subdominio fpai bajo src/metricsthinking/.
+relevance: medium
+crawl: true
+read_priority: p2
+seed_reference: optional
+tier1_preload: false
+inherited: true
+token_density: sparse
+instructions: Hereda directivas de src/metricsthinking/.
