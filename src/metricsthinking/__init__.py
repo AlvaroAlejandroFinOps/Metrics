@@ -2,7 +2,7 @@
 MetricsThinking™: Universal Project Evaluation Engine & Forensic Auditor.
 """
 
-__version__ = "4.0.0"
+__version__ = "5.0.0"
 
 from .collector import ProjectCollector, ProjectEvidence
 from .engine import run_audit

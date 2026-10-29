@@ -1,13 +1,14 @@
-<SEED_ARCHITECTURAL_VECTOR version="3.0" contains_source_code="false" artifact_type="architectural_vector" mode="architecture_and_vulnerability_audit">
+<SEED_ARCHITECTURAL_VECTOR version="5.0" contains_source_code="false" artifact_type="architectural_vector" mode="architecture_and_vulnerability_audit">
 
 # THINKING SEED MASTER: MetricsThinking™ Engine
 
 > **[DIRECTIVA DE SISTEMA PARA MODELOS DE IA RECEPTORES — CLAUDE / GPT / GEMINI / AGENTES]:**
-> 1. **Naturaleza del Artefacto:** Este documento es un **Vector Arquitectónico y Memoria Técnica (ThinkingSeed Master v3.0)** con `contains_source_code="false"`. **NO es el repositorio de código fuente completo** ni un volcado truncado. La ausencia de bloques de código de implementación es una **invariante deliberada de ingeniería** para maximizar la densidad semántica y preservar más del 99% de tu ventana de contexto.
+> 1. **Naturaleza del Artefacto:** Este documento es un **Vector Arquitectónico y Memoria Técnica (ThinkingSeed Master v5.0)** con `contains_source_code="false"`. **NO es el repositorio de código fuente completo** ni un volcado truncado. La ausencia de bloques de código de implementación es una **invariante deliberada de ingeniería** para maximizar la densidad semántica y preservar más del 99% de tu ventana de contexto.
 > 2. **Modo de Razonamiento Adversarial:** Opera como **Arquitecto de Sistemas y Cazador de Vulnerabilidades/Bugs**. Utiliza las firmas simbólicas (Sección 4) y la superficie de tensión (Sección 7) para detectar condiciones de carrera, acoplamientos frágiles y casos borde antes de proponer cambios.
 > 3. **Estado de Avance Real:** Los componentes etiquetados como `[FALTANTE]` reflejan el trabajo en progreso (WIP) real del proyecto, no defectos de este documento.
 
 ## Seed Changelog
+- `2026-10-28 (v5.0)`: [CONFIRMADO] Evolución a **MetricsThinking™ v5.0 (iContext Federation Protocol v5.0 — Capa L2)**: (1) Auditoría AST real en `drift_auditor.py` poblando `signature_mismatches` contra la Sección 4.1 del Seed; (2) Sincronización automática de artefactos en `./artifacts/plans/metricsthinking/` y del estado `l2_metricsthinking` en el Bus Cognitivo Federado `./.context/icontext_bus.json`; (3) Encabezado YAML frontmatter conforme a `./schemas/plan_metadata.schema.json` en `INFERRED_ROADMAP.md`; (4) Composición no destructiva de reglas segmentadas en `./scripts/install_skill.py`.
 - `2026-10-27`: [CONFIRMADO] Integración de detector heurístico de arquetipos (`detector.py` con 14 arquetipos ponderados), script ejecutor de benchmarks (`scripts/run_benchmark.py`), banner corporativo `MetricsThinking.jpg`, expansión de suite a 105 tests pasando al 100% y estandarización dual Paper-Grade en `README.md` y `README_ES.md`.
 - `2026-10-21`: [CONFIRMADO] Emisión de ThinkingSeed Master v3.0 para MetricsThinking™ v4.0 Holistic Governance. Incorpora arquitectura híbrida Rust/Python (`crates/metricsthinking_rs` + `src/metricsthinking/backends/`), motor espectral de eficiencia contextual FPIA (8 submódulos en `src/metricsthinking/fpai/`), firewall Zero-Tolerance (Shannon $H \le 4.5$, PII, Prompt Injection), vector de resiliencia AST ($C_a/C_e$, SPOFs), servidor MCP stdio con 6 herramientas, materialización de 4 artefactos sincronizados y suite de 94 pruebas Pytest pasando al 100%.
 - `2026-10-21`: [CONFIRMADO] Actualización mayor a ThinkingSeed Master v3.0. Estandarización de 14 perfiles canónicos YAML, soporte nativo de primitivas universales de evidencia (`EvidencePrimitiveSummary`), integración de servidor MCP stdio JSON-RPC (`mcp_server.py`), instalador multi-asistente portable (`scripts/install_skill.py`) y sincronización de contratos con `schemas/thinking_seed_v3.schema.json`.
@@ -17,13 +18,13 @@
 
 ## 0. IDENTIDAD, METADATOS Y CONTRATO DEL RECEPTOR
 ```yaml
-seed_schema_version: "3.0"
+seed_schema_version: "5.0"
 project_name: "MetricsThinking"
 repository_name: "MetricsThinking"
 project_type: "library"
 repository_mode: "single-project"
-generated_at: "2026-10-27T22:05:00-03:00"
-generated_by: "Antigravity UltraThinking Agent"
+generated_at: "2026-10-28T22:45:00-03:00"
+generated_by: "Antigravity (iContext Federation Protocol v5.0)"
 repository_root: "./"
 git_branch: "master"
 git_commit: "8fd8cca"
@@ -342,11 +343,12 @@ src/metricsthinking/detector.py::probe_archetype(target_path: str = ".") -> str 
 
 # --- src/metricsthinking/engine.py ---
 src/metricsthinking/engine.py::resolve_profile_name(hint_or_name: str | None) -> str | Normaliza alias, nombres de perfiles y lenguaje natural
+src/metricsthinking/engine.py::probe_project(target_path: str = ".", custom_profiles_dir: Path | None = None) -> ArchetypeDetectionResult | Sonda exploratoria rápida de detección de arquetipo
 src/metricsthinking/engine.py::run_audit(target_path: str = ".", profile_name: str = "default", archetype: str | None = None, out_dir: str | None = None, prefix: str = "MetricsThinking", quiet: bool = False, prune: bool = False, medallion: bool = False) -> tuple[ProjectAuditReport, dict[str, Path]] | Orquesta el pipeline completo de 5 fases y persistencia de 4 artefactos
 
 # --- src/metricsthinking/cli.py ---
 src/metricsthinking/cli.py::list_available_profiles() -> None | Despliega en stdout catálogo de 14 perfiles y arquetipos disponibles
-src/metricsthinking/cli.py::main() -> None | Parser CLI con soporte de subcomandos audit, install-skill, mcp y list-profiles
+src/metricsthinking/cli.py::main() -> None | Parser CLI con soporte de subcomandos audit (--probe, --json, --hint, --apply, --raw-dir, --processed-dir), install-skill (--all, --dest, --global, -g, --dry-run), mcp y list-profiles (--index-dir, --compact)
 
 # --- src/metricsthinking/mcp_server.py ---
 src/metricsthinking/mcp_server.py::handle_list_tools() -> list[dict[str, Any]] | Retorna especificación JSON de 6 herramientas MCP disponibles

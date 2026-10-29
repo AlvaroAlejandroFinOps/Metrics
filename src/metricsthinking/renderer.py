@@ -47,9 +47,16 @@ class ReportRenderer:
     def render_inferred_roadmap(self) -> str:
         """Generates the decoupled operational roadmap in 10 phases with interactive checklists."""
         lines = [
+            "---",
+            'id: "inferred_roadmap"',
+            f'title: "INFERRED OPERATIONAL ROADMAP: {self.report.project_name.upper()}"',
+            'status: "active"',
+            "executable: true",
+            'version: "5.0"',
+            "---",
             f"# INFERRED OPERATIONAL ROADMAP: {self.report.project_name.upper()}",
             "",
-            f"> **Framework de Gobernanza:** MetricsThinking™ v3.0 Universal ({self.report.domain_archetype.value.upper()} / Stage-Gate)  ",
+            f"> **Framework de Gobernanza:** MetricsThinking™ v5.0 Universal ({self.report.domain_archetype.value.upper()} / Stage-Gate)  ",
             f"> **Arquetipo de Dominio:** `{self.report.domain_archetype.value}` | **Modo:** `{self.report.inspection_mode.value}`  ",
             f"> **Estado Consolidado:** `{self.report.consolidated_score:.1f}% / 100.0%` — **{self.report.maturity_band.value}**  ",
             f"> **Cuello de Botella Activo:** `{self.report.active_bottleneck}`  ",
@@ -150,6 +157,38 @@ class ReportRenderer:
         json_path.write_text(json_str, encoding="utf-8")
         if root_json_path != json_path:
             root_json_path.write_text(json_str, encoding="utf-8")
+
+        # Also synchronize to artifacts/plans/metricsthinking/ if directory exists (iDirectory v5.0)
+        idir_mt_dir = target_root / "artifacts" / "plans" / "metricsthinking"
+        if idir_mt_dir.is_dir():
+            (idir_mt_dir / "MetricsThinking.md").write_text(md_content, encoding="utf-8")
+            (idir_mt_dir / "MetricsThinking.json").write_text(json_str, encoding="utf-8")
+
+        # Update .context/icontext_bus.json -> l2_metricsthinking (Protocol v5.0)
+        bus_path = target_root / ".context" / "icontext_bus.json"
+        if bus_path.is_file():
+            try:
+                from datetime import datetime, timezone
+                bus_data = json.loads(bus_path.read_text(encoding="utf-8", errors="replace"))
+                fpai = self.report.fpai
+                sec = self.report.security
+                bus_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+                if isinstance(bus_data.get("layers"), dict):
+                    bus_data["layers"]["l2_metricsthinking"] = {
+                        "consolidated_score": round(self.report.consolidated_score, 2),
+                        "maturity_band": self.report.maturity_band.value,
+                        "active_bottleneck": self.report.active_bottleneck,
+                        "fpai_power_factor_spectral": round(fpai.power_factor_spectral, 4) if fpai else 1.0,
+                        "p_active_tokens": round(fpai.p_active, 1) if fpai else 0.0,
+                        "q_dead_tokens": round(fpai.q_dead, 1) if fpai else 0.0,
+                        "q_dup_tokens": round(fpai.q_dup, 1) if fpai else 0.0,
+                        "d_structural_tokens": round(fpai.d_structural, 1) if fpai else 0.0,
+                        "attack_surface_index": round(sec.attack_surface_index, 2) if sec else 0.0,
+                        "last_audited_at": self.report.audit_date,
+                    }
+                bus_path.write_text(json.dumps(bus_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            except Exception:
+                pass
 
         return {
             "markdown": root_md_path,

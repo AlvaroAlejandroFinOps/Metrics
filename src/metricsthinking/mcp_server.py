@@ -268,7 +268,7 @@ def run_mcp_server():
                         "protocolVersion": "2024-11-05",
                         "serverInfo": {
                             "name": "metricsthinking-mcp",
-                            "version": "4.0.0"
+                            "version": "5.0.0"
                         },
                         "capabilities": {
                             "tools": {}

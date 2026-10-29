@@ -309,10 +309,15 @@ class ProjectCollector:
                                 self.evidence.seed_data = data
                                 self.evidence.detected_archetype = data.get("domain_archetype") or data.get("archetype") or data.get("project_type")
                                 self.evidence.detected_mode = data.get("inspection_mode")
-                                self.evidence.seed_version = str(data.get("seed_version", data.get("seed_schema_version", "3.0")))
+                                self.evidence.seed_version = str(data.get("seed_version", data.get("seed_schema_version", "5.0")))
                                 break
                         except Exception:
                             pass
+                if not self.evidence.seed_version and '<SEED_ARCHITECTURAL_VECTOR' in content:
+                    import re
+                    m_ver = re.search(r'<SEED_ARCHITECTURAL_VECTOR[^>]*version=["\']([^"\']+)["\']', content)
+                    if m_ver:
+                        self.evidence.seed_version = m_ver.group(1)
                 break
 
         # Multi-Signal Archetype Detection (SDD-aligned & Extensible)

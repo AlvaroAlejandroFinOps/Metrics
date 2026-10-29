@@ -64,14 +64,36 @@ def audit_seed_to_code_drift(
     # Undocumented files: in src/ but not mentioned in seed
     undocumented_files = sorted(list(relevant_repo_files - declared_paths))
 
+    # AST signature mismatch check (v5.0): verify public symbols in Python files appear in Seed
+    import ast
+    signature_mismatches: list[dict[str, Any]] = []
+    for rel_f, src_text in sorted(repo_files.items()):
+        norm = rel_f.replace("\\", "/").lstrip("./")
+        if not norm.endswith(".py") or not (norm.startswith("src/") or norm.startswith("scripts/")):
+            continue
+        if not src_text or len(src_text) < 10:
+            continue
+        try:
+            tree = ast.parse(src_text)
+        except Exception:
+            continue
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and not node.name.startswith("_"):
+                if node.name not in seed_content:
+                    signature_mismatches.append({
+                        "file": norm,
+                        "symbol": node.name,
+                        "reason": "Public AST symbol missing from Seed Section 4.1",
+                    })
+
     total = max(1, len(relevant_repo_files) + len(missing_files))
     drift_score = round(min(1.0, (len(missing_files) + len(undocumented_files)) / total), 4)
-    drift_detected = drift_score > 0.0 or len(missing_files) > 0
+    drift_detected = drift_score > 0.0 or len(missing_files) > 0 or len(signature_mismatches) > 0
 
     return {
         "drift_detected": drift_detected,
         "missing_files": missing_files,
         "undocumented_files": undocumented_files,
-        "signature_mismatches": [],
+        "signature_mismatches": signature_mismatches[:20],
         "drift_score": drift_score,
     }

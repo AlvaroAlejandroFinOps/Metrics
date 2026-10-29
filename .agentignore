@@ -12,6 +12,7 @@ __pycache__/
 artifacts/plans/archive/
 
 # >>> FPAI-PRUNE-START
+tests/other/.context.yaml
 tests/other/MetricsThinking_ThinkingSeed.json
 tests/other/MetricsThinking_ThinkingSeed.md
 # <<< FPAI-PRUNE-END

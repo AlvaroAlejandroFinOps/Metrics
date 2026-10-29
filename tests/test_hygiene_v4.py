@@ -25,15 +25,15 @@ def test_pyproject_version_and_deps():
     assert pyproject_path.exists()
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
-    assert data["project"]["version"] == "4.0.0"
+    assert data["project"]["version"] == "5.0.0"
     deps = data["project"]["dependencies"]
     assert any("jsonschema" in d for d in deps)
 
 
 def test_package_and_mcp_version_sync():
-    assert metricsthinking.__version__ == "4.0.0"
+    assert metricsthinking.__version__ == "5.0.0"
     mcp_code = Path("src/metricsthinking/mcp_server.py").read_text(encoding="utf-8")
-    assert '"version": "4.0.0"' in mcp_code
+    assert '"version": "5.0.0"' in mcp_code
 
 
 def test_skeleton_directories_removed():

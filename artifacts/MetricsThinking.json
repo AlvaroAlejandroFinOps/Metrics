@@ -1,33 +1,33 @@
 {
   "project_name": "MetricsThinking",
   "project_path": "D:\\0001 HyperScale Thinking\\PROYECTOS CLOUD\\iContext\\MetricsThinking",
-  "audit_date": "2026-10-27 22:35:30",
+  "audit_date": "2026-10-28 22:54:23",
   "auditor": "MetricsThinking™ Universal Auditor",
   "profile_used": "default",
   "domain_archetype": "software-engineering",
   "inspection_mode": "source_code",
-  "git_commit": "8fd8cca",
+  "git_commit": "2a7c41f",
   "git_branch": "master",
   "seed_detected": true,
-  "seed_version": "3.0",
+  "seed_version": "5.0",
   "evidence_primitives": {
     "config": {
       "primitive_type": "config",
-      "file_count": 35,
-      "total_lines": 3545,
+      "file_count": 59,
+      "total_lines": 3879,
       "sample_paths": [
         ".agentignore",
         ".github/workflows/ci.yml",
         "01_seed/.context.yaml",
-        "02_foundation/engine/.context.yaml",
-        "03_research/experiments/.context.yaml"
+        "02_foundation/.context.yaml",
+        "02_foundation/engine/.context.yaml"
       ],
       "verified_valid": true
     },
     "spec": {
       "primitive_type": "spec",
-      "file_count": 13,
-      "total_lines": 1711,
+      "file_count": 20,
+      "total_lines": 2208,
       "sample_paths": [
         ".agentignore",
         ".agents/skills/metrics/SKILL.md",
@@ -40,7 +40,7 @@
     "pipeline": {
       "primitive_type": "pipeline",
       "file_count": 2,
-      "total_lines": 321,
+      "total_lines": 343,
       "sample_paths": [
         ".github/workflows/ci.yml",
         "scripts/install_skill.py"
@@ -49,8 +49,8 @@
     },
     "verification": {
       "primitive_type": "verification",
-      "file_count": 37,
-      "total_lines": 9096,
+      "file_count": 38,
+      "total_lines": 9162,
       "sample_paths": [
         "03_research/experiments/.context.yaml",
         "artifacts/benchmark/BENCHMARK_REPORT.md",
@@ -62,14 +62,14 @@
     },
     "implementation": {
       "primitive_type": "implementation",
-      "file_count": 26,
-      "total_lines": 6767,
+      "file_count": 27,
+      "total_lines": 6844,
       "sample_paths": [
         ".agents/skills/metrics/SKILL.md",
+        "02_foundation/.context.yaml",
         "02_foundation/engine/.context.yaml",
         "02_foundation/engine/engine_readme.md",
-        "03_research/prompts/.context.yaml",
-        "src/__init__.py"
+        "03_research/prompts/.context.yaml"
       ],
       "verified_valid": true
     }
@@ -137,7 +137,7 @@
           "name": "Contratos JSON Schema Validados",
           "fulfilled": true,
           "evidence_path": "schemas/audit_criterion.schema.json",
-          "evidence_detail": "Contratos formales de datos / esquemas presentes (7 esquemas, e.g. 'schemas/audit_criterion.schema.json').",
+          "evidence_detail": "Contratos formales de datos / esquemas presentes (14 esquemas, e.g. 'schemas/audit_criterion.schema.json').",
           "remediation_hint": "Añadir esquemas JSON Schema o Pydantic validados en schemas/."
         },
         {
@@ -180,7 +180,7 @@
           "name": "Validación Estricta de Esquemas / Context",
           "fulfilled": true,
           "evidence_path": ".context/tree.json",
-          "evidence_detail": "Gobernanza contextual iDirectory activa con 17 archivos de contexto (.context.yaml).",
+          "evidence_detail": "Gobernanza contextual iDirectory activa con 40 archivos de contexto (.context.yaml).",
           "remediation_hint": "Asegurar validadores estrictos o gobernanza .context.yaml."
         }
       ],
@@ -214,8 +214,8 @@
           "criterion_id": "M04-C03",
           "name": "Fixture Enterprise Disponible",
           "fulfilled": true,
-          "evidence_path": "tests/fixtures/golden_baseline_report.json",
-          "evidence_detail": "Fixtures y datos de prueba disponibles (2 archivos, e.g. 'tests/fixtures/golden_baseline_report.json').",
+          "evidence_path": "tests/fixtures/.context.yaml",
+          "evidence_detail": "Fixtures y datos de prueba disponibles (3 archivos, e.g. 'tests/fixtures/.context.yaml').",
           "remediation_hint": "Proveer fixtures o esquemas de prueba deterministas en tests/fixtures o data/."
         }
       ],
@@ -301,7 +301,7 @@
           "name": "Resiliencia de Sistemas y Mitigación de SPOF",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/backends/python_fallback.py",
-          "evidence_detail": "Grafo de dependencias evaluado: 45 módulos analizados, acoplamiento estable.",
+          "evidence_detail": "Grafo de dependencias evaluado: 46 módulos analizados, acoplamiento estable.",
           "remediation_hint": "Garantizar acoplamiento desacoplado y ausencia de cuellos de botella únicos."
         },
         {
@@ -309,7 +309,7 @@
           "name": "Patrones de Tolerancia a Fallos y Fallback",
           "fulfilled": true,
           "evidence_path": "src/metricsthinking/backends/python_fallback.py",
-          "evidence_detail": "Patrones de tolerancia a fallos verificados: {'timeout': 8, 'retry': 6, 'circuit_breaker': 4, 'fallback': 25} (cobertura=95.6%).",
+          "evidence_detail": "Patrones de tolerancia a fallos verificados: {'timeout': 8, 'retry': 25, 'circuit_breaker': 4, 'fallback': 27} (cobertura=100.0%).",
           "remediation_hint": "Implementar fallbacks defensivos y patrones de tolerancia a fallos."
         }
       ],
@@ -465,7 +465,7 @@
           "name": "Eficiencia Contextual Espectral FPAI",
           "fulfilled": true,
           "evidence_path": "config/fpai_governance.yaml",
-          "evidence_detail": "Eficiencia espectral FPAI verificada: PF_spectral=0.999 >= 0.70 (S_spectral=867174, S_linear=901475).",
+          "evidence_detail": "Eficiencia espectral FPAI verificada: PF_spectral=0.999 >= 0.70 (S_spectral=930385, S_linear=966613).",
           "remediation_hint": "Mantener eficiencia espectral >= 0.70 eliminando tokens muertos o redundantes."
         }
       ],
@@ -476,11 +476,11 @@
   ],
   "remediation_plan": [],
   "stats": {
-    "total_files_scanned": 143,
+    "total_files_scanned": 179,
     "seeds_detected": 1,
     "manifests_detected": 2,
-    "context_files_detected": 17,
-    "schemas_detected": 7,
+    "context_files_detected": 40,
+    "schemas_detected": 14,
     "tests_detected": 20,
     "source_files_detected": 22,
     "is_git": true,
@@ -488,17 +488,17 @@
     "inspection_mode": "source_code"
   },
   "fpai": {
-    "p_active": 866467.0,
+    "p_active": 929651.0,
     "q_dead": 7964.0,
-    "q_dup": 27044.0,
+    "q_dup": 28998.0,
     "d_structural": 0.0,
-    "s_spectral": 867173.9284,
-    "s_linear": 901475.0,
-    "divergence_ratio": 0.038,
+    "s_spectral": 930385.496,
+    "s_linear": 966613.0,
+    "divergence_ratio": 0.0375,
     "power_factor_spectral": 0.9992,
-    "power_factor_linear": 0.9612,
-    "active_ratio": 0.9612,
-    "dead_ratio": 0.0088,
+    "power_factor_linear": 0.9618,
+    "active_ratio": 0.9618,
+    "dead_ratio": 0.0082,
     "redundant_ratio": 0.03,
     "distortion_ratio": 0.0,
     "calibration_state": "DETERMINISTIC",
@@ -525,53 +525,55 @@
   },
   "resilience": {
     "afferent_coupling_ca": {
-      "src.metricsthinking.fpai.gatekeeper": 4,
-      "src.__init__": 0,
-      "tests.test_calibration": 0,
-      "src.metricsthinking.evaluator": 7,
-      "tests.test_gatekeeper_v4": 0,
-      "src.metricsthinking.fpai.compensation": 6,
-      "tests.test_cli_mcp_renderer_v4": 0,
-      "tests.test_benchmarks_stress": 0,
-      "tests.test_renderer": 0,
-      "src.metricsthinking.fpai.__init__": 0,
-      "tests.test_scorer": 0,
-      "tests.__init__": 0,
-      "tests.test_backends_collector_v4": 0,
-      "tests.test_spectral_engine_v4": 0,
-      "src.metricsthinking.detector": 5,
-      "tests.test_collector": 0,
+      "src.metricsthinking.fpai.confidence": 2,
+      "tests.test_v3_archetypes": 0,
+      "src.metricsthinking.__init__": 0,
       "src.metricsthinking.fpai.drift_auditor": 2,
-      "src.metricsthinking.backends.python_fallback": 1,
-      "tests.test_medallion_ablation_v4": 0,
-      "src.metricsthinking.fpai.spectral_engine": 4,
-      "tests.test_models_schemas_v4": 0,
+      "tests.test_cli_mcp_renderer_v4": 0,
+      "src.metricsthinking.collector": 14,
+      "tests.test_installer": 0,
       "src.metricsthinking.fpai.ablation": 2,
       "src.metricsthinking.fpai.attribution": 2,
-      "src.metricsthinking.fpai.medallion": 4,
-      "tests.test_drift_compensation_v4": 0,
-      "src.metricsthinking.scorer": 7,
+      "tests.test_cli": 0,
+      "src.metricsthinking.fpai.gatekeeper": 4,
+      "tests.test_medallion_ablation_v4": 0,
+      "tests.test_models_schemas_v4": 0,
+      "tests.test_scorer": 0,
+      "scripts.run_benchmark": 0,
       "src.metricsthinking.models": 13,
+      "tests.__init__": 0,
+      "tests.test_archetype_detector": 0,
+      "tests.test_spectral_engine_v4": 0,
       "src.metricsthinking.backends.__init__": 0,
+      "src.metricsthinking.fpai.compensation": 6,
+      "src.metricsthinking.evaluator": 7,
+      "tests.test_calibration": 0,
+      "tests.test_renderer": 0,
+      "tests.test_gatekeeper_v4": 0,
+      "src.__init__": 0,
+      "src.metricsthinking.cli": 1,
+      "tests.test_backends_collector_v4": 0,
+      "tests.test_collector": 0,
+      "tests.test_drift_compensation_v4": 0,
+      "src.metricsthinking.engine": 12,
+      "tests.test_evaluator_v4": 0,
+      "FWengine": 0,
+      "tests.test_hygiene_v4": 0,
+      "src.metricsthinking.fpai.__init__": 0,
+      "scripts.hnsw_index_rebuild": 1,
+      "src.metricsthinking.backends.python_fallback": 1,
+      "src.metricsthinking.fpai.medallion": 4,
       "src.metricsthinking.renderer": 4,
       "tests.test_evaluator": 0,
-      "scripts.run_benchmark": 0,
-      "src.metricsthinking.cli": 1,
-      "src.metricsthinking.__init__": 0,
-      "src.metricsthinking.fpai.confidence": 2,
       "scripts.install_skill": 2,
-      "scripts.hnsw_index_rebuild": 1,
-      "tests.test_archetype_detector": 0,
-      "tests.test_cli": 0,
-      "tests.test_evaluator_v4": 0,
-      "tests.test_v3_archetypes": 0,
-      "tests.test_hygiene_v4": 0,
-      "tests.test_installer": 0,
+      "src.metricsthinking.fpai.spectral_engine": 4,
+      "tests.test_benchmarks_stress": 0,
+      "src.metricsthinking.scorer": 7,
       "src.metricsthinking.mcp_server": 3,
-      "src.metricsthinking.collector": 14,
-      "src.metricsthinking.engine": 12
+      "src.metricsthinking.detector": 5
     },
     "efferent_coupling_ce": {
+      "FWengine": 0,
       "scripts.hnsw_index_rebuild": 0,
       "scripts.install_skill": 0,
       "scripts.run_benchmark": 0,
@@ -619,6 +621,7 @@
       "tests.test_v3_archetypes": 5
     },
     "instability_i": {
+      "FWengine": 0.0,
       "scripts.hnsw_index_rebuild": 0.0,
       "scripts.install_skill": 0.0,
       "scripts.run_benchmark": 0.0,
@@ -676,15 +679,24 @@
     ],
     "resilience_patterns_count": {
       "timeout": 8,
-      "retry": 6,
+      "retry": 25,
       "circuit_breaker": 4,
-      "fallback": 25
+      "fallback": 27
     },
-    "resilience_coverage_ratio": 0.956
+    "resilience_coverage_ratio": 1.0
   },
   "pruning_plan": {
     "target_path": "D:/0001 HyperScale Thinking/PROYECTOS CLOUD/iContext/MetricsThinking",
     "items": [
+      {
+        "file_path": "tests/other/.context.yaml",
+        "line_count": 6,
+        "token_estimate": 69,
+        "pruning_type": "Q_DEAD",
+        "sha256_before": "0af8d707ded8ce6d",
+        "justification": "Zero afferent coupling and dormant context ballast",
+        "reversible": true
+      },
       {
         "file_path": "tests/other/MetricsThinking_ThinkingSeed.json",
         "line_count": 508,
@@ -704,10 +716,10 @@
         "reversible": true
       }
     ],
-    "total_tokens_recovered": 8868,
+    "total_tokens_recovered": 8937,
     "active_tokens_remaining": 1000,
     "power_factor_target": 0.85,
-    "generated_at": "2026-10-28T01:35:30.308795+00:00"
+    "generated_at": "2026-10-29T01:54:23.540570+00:00"
   },
   "consolidated_score": 100.0,
   "maturity_band": "Excelencia Operativa / Producción (90.0% - 100.0%)",

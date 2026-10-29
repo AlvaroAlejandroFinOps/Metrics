@@ -135,6 +135,28 @@ def install_codex(dest_root: Path, is_global: bool = False, dry_run: bool = Fals
     return created
 
 
+def _upsert_segmented_rule(src_file: Path, dest_file: Path, tool_key: str = "METRICSTHINKING") -> None:
+    """Inserts or updates a segmented rule block non-destructively (Protocol v5.0)."""
+    content = src_file.read_text(encoding="utf-8", errors="replace").strip()
+    start_marker = f"<!-- >>> ICONTEXT-V5:{tool_key}:START >>> -->"
+    end_marker = f"<!-- <<< ICONTEXT-V5:{tool_key}:END >>> -->"
+    wrapped = f"{start_marker}\n{content}\n{end_marker}"
+    if not dest_file.exists():
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        dest_file.write_text(wrapped + "\n", encoding="utf-8")
+        return
+    existing = dest_file.read_text(encoding="utf-8", errors="replace")
+    if start_marker in existing and end_marker in existing:
+        import re
+        pattern = re.compile(re.escape(start_marker) + r".*?" + re.escape(end_marker), re.DOTALL)
+        updated = pattern.sub(lambda _m: wrapped, existing)
+    elif existing.strip() and existing.strip() != content:
+        updated = existing.rstrip() + "\n\n" + wrapped + "\n"
+    else:
+        updated = wrapped + "\n"
+    dest_file.write_text(updated, encoding="utf-8")
+
+
 def install_claude(dest_root: Path, dry_run: bool = False) -> list[Path]:
     created = []
     print(f"[*] Installing Anthropic Claude Code Integration -> {dest_root}")
@@ -143,7 +165,7 @@ def install_claude(dest_root: Path, dry_run: bool = False) -> list[Path]:
 
     if src_claude_md.exists():
         if not dry_run:
-            shutil.copy2(src_claude_md, target_claude_md)
+            _upsert_segmented_rule(src_claude_md, target_claude_md, "METRICSTHINKING")
         created.append(target_claude_md)
 
     return created
