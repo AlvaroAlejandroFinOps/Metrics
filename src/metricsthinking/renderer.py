@@ -164,29 +164,71 @@ class ReportRenderer:
             (idir_mt_dir / "MetricsThinking.md").write_text(md_content, encoding="utf-8")
             (idir_mt_dir / "MetricsThinking.json").write_text(json_str, encoding="utf-8")
 
-        # Update .context/icontext_bus.json -> l2_metricsthinking (Protocol v5.0)
+        # Update .context/icontext_bus.json -> layers.l2_metricsthinking (Protocol v5.0)
         bus_path = target_root / ".context" / "icontext_bus.json"
         if bus_path.is_file():
             try:
+                import time, os, uuid, threading, random
                 from datetime import datetime, timezone
-                bus_data = json.loads(bus_path.read_text(encoding="utf-8", errors="replace"))
-                fpai = self.report.fpai
-                sec = self.report.security
-                bus_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-                if isinstance(bus_data.get("layers"), dict):
-                    bus_data["layers"]["l2_metricsthinking"] = {
-                        "consolidated_score": round(self.report.consolidated_score, 2),
-                        "maturity_band": self.report.maturity_band.value,
-                        "active_bottleneck": self.report.active_bottleneck,
-                        "fpai_power_factor_spectral": round(fpai.power_factor_spectral, 4) if fpai else 1.0,
-                        "p_active_tokens": round(fpai.p_active, 1) if fpai else 0.0,
-                        "q_dead_tokens": round(fpai.q_dead, 1) if fpai else 0.0,
-                        "q_dup_tokens": round(fpai.q_dup, 1) if fpai else 0.0,
-                        "d_structural_tokens": round(fpai.d_structural, 1) if fpai else 0.0,
-                        "attack_surface_index": round(sec.attack_surface_index, 2) if sec else 0.0,
-                        "last_audited_at": self.report.audit_date,
-                    }
-                bus_path.write_text(json.dumps(bus_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                
+                # Safe read with retry
+                bus_data = None
+                delay = 0.015
+                for _ in range(6):
+                    try:
+                        bus_data = json.loads(bus_path.read_text(encoding="utf-8", errors="replace"))
+                        break
+                    except (OSError, json.JSONDecodeError):
+                        time.sleep(delay + random.uniform(0.005, 0.015))
+                        delay *= 1.5
+
+                if isinstance(bus_data, dict):
+                    fpai = self.report.fpai
+                    sec = self.report.security
+                    bus_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    bus_data.pop("l1_thinkingseed", None)
+                    if isinstance(bus_data.get("layers"), dict):
+                        report_rel = "artifacts/plans/metricsthinking/MetricsThinking.json" if idir_mt_dir.is_dir() else "MetricsThinking.json"
+                        bus_data["layers"]["l2_metricsthinking"] = {
+                            "present": True,
+                            "version": "5.0.0",
+                            "report_path": report_rel,
+                            "consolidated_score": round(self.report.consolidated_score, 2),
+                            "maturity_band": self.report.maturity_band.value,
+                            "active_bottleneck": self.report.active_bottleneck,
+                            "fpai_pf_spectral": round(fpai.power_factor_spectral, 4) if fpai else 1.0,
+                            "fpai_s_spectral": round(getattr(fpai, "s_spectral", 0.0), 4) if fpai else 0.0,
+                            "security_gate": 1.0 if getattr(sec, "pii_matches_count", 0) == 0 else 0.0,
+                            "p_active_tokens": round(fpai.p_active, 1) if fpai else 0.0,
+                            "q_dead_tokens": round(fpai.q_dead, 1) if fpai else 0.0,
+                            "q_dup_tokens": round(fpai.q_dup, 1) if fpai else 0.0,
+                            "d_structural_tokens": round(fpai.d_structural, 1) if fpai else 0.0,
+                            "attack_surface_index": round(sec.attack_surface_index, 2) if sec else 0.0,
+                            "last_audited_at": self.report.audit_date,
+                        }
+                    
+                    # Safe atomic write with unique tmp and guaranteed cleanup
+                    unique_suffix = f"{os.getpid()}_{threading.get_ident()}_{uuid.uuid4().hex[:8]}"
+                    tmp_bus = bus_path.parent / f".tmp_{unique_suffix}_{bus_path.name}"
+                    payload = json.dumps(bus_data, indent=2, ensure_ascii=False) + "\n"
+                    delay = 0.02
+                    try:
+                        tmp_bus.write_text(payload, encoding="utf-8")
+                        for attempt in range(10):
+                            try:
+                                os.replace(tmp_bus, bus_path)
+                                break
+                            except OSError:
+                                if attempt == 9:
+                                    raise
+                                time.sleep(delay + random.uniform(0.01, 0.03))
+                                delay *= 1.4
+                    finally:
+                        if tmp_bus.exists():
+                            try:
+                                tmp_bus.unlink()
+                            except OSError:
+                                pass
             except Exception:
                 pass
 
